@@ -1,90 +1,36 @@
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PUBG Web 3D</title>
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Nhúng thư viện tạo Joystick ảo -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
+</head>
+<body>
+    <div id="game-container"></div>
 
-// 1. Tạo không gian cơ bản
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87CEEB);
-
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.getElementById('game-container').appendChild(renderer.domElement);
-
-const light = new THREE.AmbientLight(0xffffff, 1);
-scene.add(light);
-const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-dirLight.position.set(5, 10, 5);
-scene.add(dirLight);
-
-const planeGeom = new THREE.PlaneGeometry(100, 100);
-const planeMat = new THREE.MeshStandardMaterial({ color: 0x228B22 });
-const plane = new THREE.Mesh(planeGeom, planeMat);
-plane.rotation.x = -Math.PI / 2;
-scene.add(plane);
-
-// 2. TẢI MÔ HÌNH 3D THẬT
-let player; // Biến rỗng chờ tải mô hình
-const loader = new GLTFLoader();
-
-loader.load(
-    'nhanvat.glb', // Đúng với tên file bạn vừa upload lên GitHub
-    function (gltf) {
-        player = gltf.scene;
-        player.position.set(0, 0, 0); // Đặt giữa mặt đất
+    <!-- Giao diện Mobile -->
+    <div id="ui-container">
+        <!-- Vùng chứa Joystick bên trái -->
+        <div id="joystick-zone"></div>
         
-        // Nếu mô hình quá to hoặc quá nhỏ, đổi số 1 thành 0.5 hoặc 2
-        player.scale.set(1, 1, 1); 
-        
-        scene.add(player);
-    },
-    undefined,
-    function (error) {
-        console.error('Lỗi khi tải mô hình 3D:', error);
-    }
-);
+        <!-- Nút bắn bên phải -->
+        <div id="actions">
+            <button id="btn-shoot">Bắn 💥</button>
+        </div>
+    </div>
 
-// 3. KẾT NỐI NÚT BẤM
-let moveForward = false; let moveBackward = false;
-let moveLeft = false; let moveRight = false;
-
-function setupButton(id, action) {
-    const btn = document.getElementById(id);
-    btn.addEventListener('touchstart', (e) => { e.preventDefault(); action(true); });
-    btn.addEventListener('touchend', (e) => { e.preventDefault(); action(false); });
-    btn.addEventListener('mousedown', () => action(true));
-    btn.addEventListener('mouseup', () => action(false));
-    btn.addEventListener('mouseleave', () => action(false));
-}
-
-setupButton('btn-up', (val) => moveForward = val);
-setupButton('btn-down', (val) => moveBackward = val);
-setupButton('btn-left', (val) => moveLeft = val);
-setupButton('btn-right', (val) => moveRight = val);
-
-document.getElementById('btn-shoot').addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    alert('Pằng pằng!');
-});
-
-// 4. VÒNG LẶP GAME
-const speed = 0.15; 
-
-function animate() {
-    requestAnimationFrame(animate);
-
-    // Chỉ cho phép di chuyển và bám camera nếu mô hình đã tải xong
-    if (player) {
-        if (moveForward) player.position.z -= speed;
-        if (moveBackward) player.position.z += speed;
-        if (moveLeft) player.position.x -= speed;
-        if (moveRight) player.position.x += speed;
-
-        camera.position.x = player.position.x;
-        camera.position.y = player.position.y + 3;
-        camera.position.z = player.position.z + 6;
-        camera.lookAt(player.position);
-    }
-
-    renderer.render(scene, camera);
-}
-animate();
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module" src="js/game.js"></script>
+</body>
+</html>
