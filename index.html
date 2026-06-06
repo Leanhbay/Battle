@@ -5,15 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>PUBG Web 3D</title>
     <link rel="stylesheet" href="css/style.css">
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.10.1/nipplejs.min.js"></script>
 </head>
 <body>
     <div id="game-container"></div>
 
+    <div id="loading-text" style="position: absolute; top: 50%; width: 100%; text-align: center; color: yellow; font-size: 24px; font-weight: bold; text-shadow: 2px 2px 4px #000; pointer-events: none; z-index: 100;">
+        Đang chuẩn bị tải nhân vật...
+    </div>
+
     <div id="ui-container">
         <div id="joystick-zone"></div>
-        
         <div id="actions">
             <button id="btn-shoot">Bắn 💥</button>
         </div>
