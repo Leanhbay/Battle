@@ -2,7 +2,7 @@ body {
     margin: 0;
     overflow: hidden;
     background-color: #000;
-    touch-action: none; /* Chặn thu phóng màn hình */
+    touch-action: none; /* Chặn thu phóng màn hình khi vuốt Joystick */
     user-select: none;  /* Chặn bôi đen chữ */
 }
 
