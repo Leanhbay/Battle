@@ -2,14 +2,27 @@ body {
     margin: 0;
     overflow: hidden;
     background-color: #000;
-    touch-action: none; /* Chặn thu phóng màn hình khi vuốt Joystick */
-    user-select: none;  /* Chặn bôi đen chữ */
+    touch-action: none;
+    user-select: none;
 }
 
 #game-container {
     width: 100vw;
     height: 100vh;
     display: block;
+}
+
+#crosshair {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 30px;
+    font-weight: bold;
+    pointer-events: none;
+    text-shadow: 0px 0px 4px red, 0px 0px 4px red; 
+    z-index: 50;
 }
 
 #ui-container {
@@ -21,19 +34,18 @@ body {
     align-items: flex-end;
     padding: 0 30px;
     box-sizing: border-box;
-    pointer-events: none; /* Cho phép chạm xuyên qua khoảng trống */
+    pointer-events: none;
 }
 
-/* Khu vực của Joystick */
 #joystick-zone {
     width: 120px;
     height: 120px;
     position: relative;
-    pointer-events: auto; /* Bật cảm ứng cho Joystick */
+    pointer-events: auto;
 }
 
 #actions {
-    pointer-events: auto; /* Bật cảm ứng cho Nút bắn */
+    pointer-events: auto;
 }
 
 #btn-shoot {
