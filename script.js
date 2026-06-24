@@ -8,33 +8,37 @@ document.addEventListener('touchmove', e => { if(e.scale !== 1) e.preventDefault
 // --- BIẾN TOÀN CỤC CHỨA INFO SAU TRẬN ĐỂ CẬP NHẬT ---
 let tempMatchResult = { rankPoints: 0, kills: 0, gunPoints: 0 };
 
-// --- DATA NGƯỜI CHƠI & KHỞI TẠO 1000 BOT (RESET VỀ 0 ĐỂ CÔNG BẰNG) ---
+// --- DATA NGƯỜI CHƠI (Tất cả điểm số đều Reset về 0) ---
 let playersData = [
     { id: "me", name: "Lẻ Anh Bảy", rankPoints: 0, kills: 0, matches: 0, gunPoints: 0, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lẻ Anh Bảy&backgroundColor=b6e3f4" }
 ];
 
-// Tạo kho tên ngẫu nhiên độc nhất (10 * 10 * 10 = 1000 tổ hợp tên không trùng)
-const prefixes = ['SátThủ', 'Trùm', 'Vua', 'Kẻ', 'Thần', 'HuyềnThoại', 'ThợSăn', 'ChiếnBinh', 'LãngTử', 'CaoThủ'];
-const roots = ['BắnTỉa', 'NúpBụi', 'ChạyBo', 'SinhTồn', 'LootĐồ', 'GánhTạ', 'CânTeam', 'BoDạo', 'BấtBại', 'HủyDiệt'];
-const suffixes = ['VN', 'Pro', 'GG', 'Gaming', 'Top1', 'Solo', 'No1', '9x', '2k', 'Víp'];
+// Danh sách tên Bot để random không bị trùng lặp
+const botNamesList = [
+    "FakerVN", "NoobMaster", "ProSniper", "ChickenLover", "DarkKnight", "ShadowNinja", "GhostRider", 
+    "DragonSlayer", "IronMan", "Captain", "Thor", "Hulk", "BlackWidow", "Hawkeye", "Superman", 
+    "Batman", "Flash", "Aquaman", "WonderWoman", "Cyborg", "Joker", "HarleyQuinn", "Thanos", 
+    "Loki", "Ultron", "Venom", "Deadpool", "Wolverine", "Magneto", "ProfessorX", "Storm", 
+    "JeanGrey", "Cyclops", "Beast", "Nightcrawler", "Rogue", "Gambit", "Iceman", "Colossus", 
+    "KittyPryde", "EmmaFrost", "Mystique", "Sabretooth", "Juggernaut", "Toad", "Blob", "Pyro", 
+    "Avalanche", "Gosu", "Kuroky", "Miracle", "Topson", "Ana", "Dendi", "Puppey"
+];
 
-let botCount = 1;
-for (let p of prefixes) {
-    for (let r of roots) {
-        for (let s of suffixes) {
-            let botName = `${p}${r}_${s}`;
-            playersData.push({
-                id: "bot_" + botCount,
-                name: botName,
-                rankPoints: 0,
-                kills: 0,
-                matches: 0,
-                gunPoints: 0,
-                avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${botName}&backgroundColor=bfdbfe`
-            });
-            botCount++;
-        }
-    }
+// Trộn mảng tên Bot ngẫu nhiên
+let shuffledNames = botNamesList.sort(() => 0.5 - Math.random());
+const bgColors = ['b6e3f4','c0aede','ffdfbf','d1d4f9','ffd5dc', 'ffc0cb', 'a0cecb'];
+
+// Khởi tạo 49 Bot vào Server
+for(let i = 0; i < 49; i++) {
+    playersData.push({
+        id: "bot_" + i,
+        name: shuffledNames[i] || ("Bot_" + i),
+        rankPoints: 0,
+        kills: 0,
+        matches: 0,
+        gunPoints: 0,
+        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${shuffledNames[i]}&backgroundColor=${bgColors[Math.floor(Math.random() * bgColors.length)]}`
+    });
 }
 
 // --- LOGIC CHUYỂN TAB ---
@@ -70,23 +74,27 @@ function calculateGunPoints(rank, kills) {
     return base;
 }
 
-// --- RENDER BẢNG XẾP HẠNG SIÊU ĐẸP (GIỚI HẠN 50 BẬC) ---
+// --- RENDER BẢNG XẾP HẠNG THÔNG MINH (Không bị giật mất thanh cuộn) ---
 function renderLeaderboards() {
     const renderList = (id, sortKey, label) => {
         const ul = document.getElementById(id);
-        ul.innerHTML = "";
+        let sorted = [...playersData].sort((a, b) => b[sortKey] - a[sortKey]);
         
-        // Sắp xếp và chỉ cắt lấy đúng TOP 50 người cao điểm nhất
-        let sorted = [...playersData].sort((a, b) => b[sortKey] - a[sortKey]).slice(0, 50);
+        // Cập nhật DOM khéo léo để không làm mất Scroll
+        if (ul.children.length === 0) {
+            sorted.forEach((p, index) => {
+                let li = document.createElement("li");
+                li.className = "animate-slide";
+                li.style.animationDelay = `${index * 0.02}s`;
+                ul.appendChild(li);
+            });
+        }
         
         sorted.forEach((p, index) => {
-            let li = document.createElement("li");
-            // Rút ngắn thời gian delay animation để cuộn mượt và không bị lag khi render lại
-            li.style.animationDelay = `${index * 0.01}s`;
-            
+            let li = ul.children[index];
             let rankClass = index === 0 ? 'rank-1' : (index === 1 ? 'rank-2' : (index === 2 ? 'rank-3' : ''));
             if (p.id === "me") rankClass += " is-me";
-            li.className = rankClass.trim();
+            li.className = rankClass.trim() || 'normal-rank'; // Cập nhật Class mới nhất
 
             li.innerHTML = `
                 <div class="player-info">
@@ -99,7 +107,6 @@ function renderLeaderboards() {
                     <span class="score-label">${label}</span>
                 </div>
             `;
-            ul.appendChild(li);
         });
     };
 
@@ -112,28 +119,26 @@ function renderLeaderboards() {
 // Chạy lần đầu
 renderLeaderboards();
 
-// --- MÔ PHỎNG BOT TỰ ĐỘNG CỘNG ĐIỂM NGẪU NHIÊN (1-15 ĐIỂM) TỪNG CHÚT MỘT ---
+// --- SIMULATE SERVER (Bot chơi tự động cạnh tranh BXH) ---
 setInterval(() => {
-    // Chọn ngẫu nhiên từ 2 đến 4 con bot hoàn thành trận đấu cùng lúc
-    const botsActiveCount = Math.floor(Math.random() * 3) + 2;
-
-    for (let i = 0; i < botsActiveCount; i++) {
-        // Lấy ngẫu nhiên vị trí bot trong mảng (bỏ qua vị trí index 0 của người chơi)
-        let randomBotIndex = Math.floor(Math.random() * (playersData.length - 1)) + 1;
+    // Giả lập 2 đến 5 Bot tham gia xong trận mỗi 5 giây
+    let numBots = Math.floor(Math.random() * 4) + 2; 
+    for(let i = 0; i < numBots; i++) {
+        let randomBotIndex = Math.floor(Math.random() * 49) + 1; // Từ 1 đến 49 (bỏ qua 'me' ở index 0)
         let bot = playersData[randomBotIndex];
-
-        // Cộng điểm ngẫu nhiên từ 1 đến 15 theo yêu cầu
-        let pointsGained = Math.floor(Math.random() * 15) + 1;
-
-        bot.rankPoints += pointsGained;
-        bot.gunPoints += pointsGained;
-        bot.kills += Math.max(1, Math.floor(pointsGained / 3)); // Kills tăng thực tế theo điểm số
-        bot.matches += 1; // Tăng thêm 1 trận đấu
+        
+        // Bot nhận điểm ngẫu nhiên từ 1 - 15
+        bot.rankPoints += Math.floor(Math.random() * 15) + 1;
+        bot.kills += Math.floor(Math.random() * 15) + 1;
+        bot.gunPoints += Math.floor(Math.random() * 15) + 1;
+        bot.matches += 1;
     }
-
-    // Làm mới bảng xếp hạng theo thời gian thực
-    renderLeaderboards();
-}, 4000); // Cứ mỗi 4 giây sẽ có bot được cộng điểm, giúp BXH tăng tiến liên tục nhưng không quá nhanh.
+    
+    // Nếu đang đứng ở Sảnh thì Render lại bảng ngay để thấy Bot leo rank
+    if (document.getElementById('lobby-container').classList.contains('active')) {
+        renderLeaderboards();
+    }
+}, 5000); // 5000 ms = mỗi 5 giây cộng điểm cho vài Bot
 
 // --- LOGIC TRẬN ĐẤU & LƯU THỐNG KÊ ---
 function startGame() {
@@ -179,13 +184,14 @@ function showStats(rank, kills) {
     document.getElementById('stat-gun-pts').innerText = "+" + gunPts;
 }
 
-// --- CẬP NHẬT LÊN BẢNG XẾP HẠNG (THỜI GIAN THỰC) ---
+// --- CẬP NHẬT LÊN BẢNG XẾP HẠNG ---
 function backToLobbyAndSave() {
     let myData = playersData.find(p => p.id === "me");
     myData.rankPoints += tempMatchResult.rankPoints;
-    // Điểm số của bạn không được âm dưới 0
-    if(myData.rankPoints < 0) myData.rankPoints = 0;
     
+    // Cấm để điểm Rank bị âm kịch sàn quá mức
+    if (myData.rankPoints < 0) myData.rankPoints = 0; 
+
     myData.kills += tempMatchResult.kills;
     myData.gunPoints += tempMatchResult.gunPoints;
     myData.matches += 1;
@@ -201,6 +207,4 @@ function backToLobbyAndSave() {
     
     let zone = document.getElementById('blue-zone');
     zone.style.display = 'none'; zone.classList.remove('shrinking');
-
-    // Đã loại bỏ hoàn toàn việc gọi hàm showToast thông báo tại đây
 }
