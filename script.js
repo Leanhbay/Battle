@@ -71,7 +71,7 @@ function initBots() {
             kills: 0,
             matches: 0,
             gunPoints: 0,
-            top1: 0, // Dữ liệu Top 1
+            top1: 0, // Dữ liệu Top 1 (vẫn giữ lại để lưu ngầm trong hồ sơ)
             avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${botName}&backgroundColor=${bgColors[Math.floor(Math.random() * bgColors.length)]}`
         });
     }
@@ -131,7 +131,7 @@ function renderLeaderboards() {
         const ul = document.getElementById(id);
         if(!ul) return;
         
-        // MẸO: Mặc dù có 2000 Bot nhưng ta chỉ render TOP 100 bằng slice(0, 100) để máy không bị lag giật
+        // Render TOP 100 bằng slice(0, 100) để máy không bị lag giật
         let sorted = [...playersData].sort((a, b) => b[sortKey] - a[sortKey]).slice(0, 100);
         
         // Tạo cấu trúc DOM lúc load lần đầu
@@ -144,7 +144,7 @@ function renderLeaderboards() {
             });
         }
         
-        // Update lại nội dung của đúng 100 elements (Rất nhẹ và nhanh)
+        // Update lại nội dung của đúng 100 elements
         sorted.forEach((p, index) => {
             let li = ul.children[index];
             let rankClass = index === 0 ? 'rank-1' : (index === 1 ? 'rank-2' : (index === 2 ? 'rank-3' : ''));
@@ -165,11 +165,10 @@ function renderLeaderboards() {
         });
     };
 
+    // Chỉ giữ lại 3 bảng này theo yêu cầu
     renderList('list-rank', 'rankPoints', 'Điểm Rank');
     renderList('list-kills', 'kills', 'Tổng Kills');
-    renderList('list-matches', 'matches', 'Trận Chơi');
     renderList('list-gun', 'gunPoints', 'Điểm Súng');
-    renderList('list-top1', 'top1', 'Số Trận Top 1'); // Bảng mới
 }
 
 // --- HỆ THỐNG MÔ PHỎNG BOT TỰ ĐỘNG CHƠI (Tối ưu để chạy ngầm) ---
