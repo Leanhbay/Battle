@@ -8,26 +8,64 @@
 </head>
 <body>
 
-    <div id="ui-layer">
-        <h1>BATTLE ROYALE 2.5D</h1>
-        <p>Trạng thái: <span id="statusText" style="color: #00FF00;">Đang nhảy dù...</span></p>
-        <p>Điểm: <span id="scoreText">0</span> | HP: <span id="hpText">100</span></p>
+    <!-- ================= SẢNH CHỜ (LOBBY) ================= -->
+    <div id="lobby-ui">
+        <div class="lobby-title">PUBG 2.5D WEB</div>
+        
+        <div class="lobby-menu">
+            <button class="lobby-btn btn-play" onclick="startGame()">BẮT ĐẦU VÀO TRẬN</button>
+            <button class="lobby-btn" onclick="showProfile()">Hồ Sơ Của Tôi</button>
+            <button class="lobby-btn" onclick="showLeaderboard('rank')">BXH Điểm Rank</button>
+            <button class="lobby-btn" onclick="showLeaderboard('kills')">BXH Tổng Kills</button>
+            <button class="lobby-btn" onclick="showLeaderboard('matches')">BXH Số Trận</button>
+            <button class="lobby-btn" onclick="showLeaderboard('weapon')">BXH Điểm Súng</button>
+        </div>
+
+        <!-- Popup Hồ sơ / BXH -->
+        <div id="lobby-modal" class="modal-hidden">
+            <div class="modal-content">
+                <h2 id="modal-title">Tiêu đề</h2>
+                <div id="modal-body">Nội dung</div>
+                <button class="close-btn" onclick="closeModal()">Đóng</button>
+            </div>
+        </div>
     </div>
 
-    <div id="controls">
-        <strong>PC:</strong> W,A,S,D di chuyển | Chuột ngắm & Bắn | Phím F đóng/mở cửa.<br>
-        <strong>Mobile:</strong> Dùng Joystick, Nút Bắn & Nút Mở Cửa.
-    </div>
-    
-    <div class="blood-overlay" id="blood"></div>
+    <!-- ================= MÀN HÌNH GAME ================= -->
+    <div id="game-ui" style="display: none;">
+        <div id="ui-layer">
+            <h1>BATTLE ROYALE</h1>
+            <p>Trạng thái: <span id="statusText" style="color: #00FF00;">Đang nhảy dù...</span></p>
+            <p>Điểm: <span id="scoreText">0</span> | HP: <span id="hpText">100</span></p>
+        </div>
 
-    <div id="joystick-zone">
-        <div id="joystick-knob"></div>
-    </div>
-    <div id="shoot-btn">BẮN</div>
-    <div id="interact-btn">MỞ</div>
+        <div id="controls">
+            <strong>PC:</strong> W,A,S,D di chuyển | Chuột ngắm & Bắn | F nhặt/mở.<br>
+            <strong>Mobile:</strong> Dùng Joystick, Nút Bắn & Nút Mở Cửa.
+        </div>
+        
+        <div class="blood-overlay" id="blood"></div>
 
-    <canvas id="gameCanvas"></canvas>
+        <div id="joystick-zone"><div id="joystick-knob"></div></div>
+        <div id="shoot-btn">BẮN</div>
+        <div id="interact-btn">MỞ</div>
+
+        <!-- Popup Kết thúc trận đấu (Hiện sau 5s khi chết/top 1) -->
+        <div id="post-match-modal" class="modal-hidden">
+            <div class="post-match-box">
+                <h1 id="pm-title">KẾT THÚC TRẬN ĐẤU</h1>
+                <div class="pm-stats">
+                    <p>Xếp hạng: <span id="pm-rank" class="highlight">#1</span></p>
+                    <p>Kills: <span id="pm-kills" class="highlight">0</span></p>
+                    <p>Điểm Rank nhận: <span id="pm-rankpts" class="highlight">+20</span></p>
+                    <p>Điểm Súng nhận: <span id="pm-weaponpts" class="highlight">+5</span></p>
+                </div>
+                <button class="btn-play" onclick="returnToLobby()">TRỞ VỀ SẢNH</button>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas"></canvas>
+    </div>
 
     <script src="script.js"></script>
 </body>
