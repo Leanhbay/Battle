@@ -20,43 +20,46 @@
         #lobby-container.active, #game-container.active, #match-stats.active { display: flex; flex-direction: column; }
         
         /* Thanh điều hướng */
-        .lobby-nav { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; padding: 15px; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5); z-index: 10; }
-        .nav-btn { background: rgba(255, 255, 255, 0.05); color: #94a3b8; border: 1px solid rgba(255, 255, 255, 0.1); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
+        .lobby-nav { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; padding: 12px; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5); z-index: 10; }
+        .nav-btn { background: rgba(255, 255, 255, 0.05); color: #94a3b8; border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s; text-transform: uppercase; font-size: 11px; letter-spacing: 1px; }
         .nav-btn:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
         .nav-btn.active { color: #000; background: linear-gradient(45deg, #fbbf24, #f59e0b); border-color: #fbbf24; box-shadow: 0 0 15px rgba(251, 191, 36, 0.4); }
         
-        /* Nội dung Tab */
-        .tab-content { display: none; flex: 1; padding: 30px 15px; max-width: 800px; margin: 0 auto; width: 100%; overflow-y: auto; overflow-x: hidden; }
+        /* Nội dung Tab - Đã giảm padding để tránh cuộn trang */
+        .tab-content { display: none; flex: 1; padding: 15px; max-width: 800px; margin: 0 auto; width: 100%; overflow-y: auto; overflow-x: hidden; }
         .tab-content.active { display: block; animation: fadeInZoom 0.4s ease-out; }
-        .tab-title { text-align: center; margin-bottom: 20px; color: #f8fafc; font-size: 24px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .tab-title { text-align: center; margin-bottom: 20px; color: #f8fafc; font-size: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
         
-        /* Hồ Sơ */
-        .profile-header { text-align: center; margin-bottom: 20px; }
-        .main-avatar { width: 100px; height: 100px; border-radius: 50%; border: 3px solid #38bdf8; box-shadow: 0 0 20px rgba(56, 189, 248, 0.5); margin-bottom: 15px; }
+        /* Hồ Sơ - Làm gọn hình ảnh và chữ */
+        .profile-header { text-align: center; margin-bottom: 10px; }
+        .main-avatar { width: 70px; height: 70px; border-radius: 50%; border: 3px solid #38bdf8; box-shadow: 0 0 20px rgba(56, 189, 248, 0.5); margin-bottom: 5px; }
+        .profile-header h2 { font-size: 18px; margin: 5px 0; }
         .highlight { color: #fbbf24; font-weight: bold; }
         .highlight-green { color: #4ade80; font-weight: bold; text-shadow: 0 0 10px rgba(74, 222, 128, 0.5); }
-        .glow-text { color: #38bdf8; font-size: 26px; text-shadow: 0 0 10px rgba(56, 189, 248, 0.6); display: block; margin-top: 10px; }
-        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-        .stat-box { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); padding: 20px 10px; border-radius: 15px; text-align: center; backdrop-filter: blur(5px); transition: transform 0.3s; }
-        .stat-box:hover { transform: translateY(-5px); border-color: rgba(56, 189, 248, 0.3); }
         
-        /* Nút bấm hiệu ứng */
-        .start-btn { width: 100%; margin-top: 30px; padding: 18px; background: linear-gradient(45deg, #ea580c, #dc2626); color: white; border: none; font-size: 20px; font-weight: 900; border-radius: 12px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4); transition: all 0.2s; }
+        /* Chỉnh lại Grid và Box thống kê cho gọn */
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        .stat-box { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); padding: 12px 10px; border-radius: 12px; text-align: center; backdrop-filter: blur(5px); transition: transform 0.3s; font-size: 13px; color: #cbd5e1; }
+        .stat-box:hover { transform: translateY(-3px); border-color: rgba(56, 189, 248, 0.3); }
+        .glow-text { color: #38bdf8; font-size: 22px; text-shadow: 0 0 10px rgba(56, 189, 248, 0.6); display: block; margin-top: 5px; font-weight: bold; }
+        
+        /* Nút bấm hiệu ứng - Kéo lên cao hơn */
+        .start-btn { width: 100%; margin-top: 15px; padding: 15px; background: linear-gradient(45deg, #ea580c, #dc2626); color: white; border: none; font-size: 18px; font-weight: 900; border-radius: 12px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4); transition: all 0.2s; }
         .start-btn:active { transform: scale(0.95); }
         .pulse-anim { animation: pulse 2s infinite; }
         
         /* --- BẢNG XẾP HẠNG --- */
         .leaderboard { list-style: none; padding-bottom: 50px; }
-        .leaderboard li { display: flex; align-items: center; justify-content: space-between; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255,255,255,0.05); margin-bottom: 12px; border-radius: 12px; padding: 12px 20px; backdrop-filter: blur(10px); transition: all 0.3s ease; }
+        .leaderboard li { display: flex; align-items: center; justify-content: space-between; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px; border-radius: 12px; padding: 10px 15px; backdrop-filter: blur(10px); transition: all 0.3s ease; }
         .leaderboard li:hover { transform: scale(1.02) translateX(0) !important; background: rgba(51, 65, 85, 0.9); box-shadow: 0 10px 20px rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.2); z-index: 2; position: relative; }
         .animate-slide { opacity: 0; transform: translateX(30px); animation: slideInRight 0.5s forwards ease-out; }
-        .player-info { display: flex; align-items: center; gap: 15px; flex: 1; }
-        .rank-number { font-size: 22px; font-weight: 900; width: 35px; text-align: center; color: #64748b; }
-        .player-avatar { width: 45px; height: 45px; border-radius: 50%; background: #0f172a; border: 2px solid transparent; }
-        .player-name { font-size: 16px; font-weight: bold; color: #f1f5f9; }
+        .player-info { display: flex; align-items: center; gap: 12px; flex: 1; }
+        .rank-number { font-size: 18px; font-weight: 900; width: 30px; text-align: center; color: #64748b; }
+        .player-avatar { width: 40px; height: 40px; border-radius: 50%; background: #0f172a; border: 2px solid transparent; }
+        .player-name { font-size: 15px; font-weight: bold; color: #f1f5f9; }
         .player-score { text-align: right; }
-        .score-value { display: block; font-size: 20px; font-weight: 900; color: #38bdf8; }
-        .score-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; }
+        .score-value { display: block; font-size: 18px; font-weight: 900; color: #38bdf8; }
+        .score-label { font-size: 10px; color: #94a3b8; text-transform: uppercase; }
         
         /* Top 1, 2, 3 Ranks */
         .rank-1 { background: linear-gradient(90deg, rgba(251, 191, 36, 0.15), rgba(30, 41, 59, 0.8)) !important; border-left: 4px solid #fbbf24 !important; }
@@ -72,9 +75,9 @@
         
         /* --- BẢNG THỐNG KÊ --- */
         #match-stats { background: rgba(2, 6, 23, 0.95); justify-content: center; align-items: center; padding: 20px; z-index: 1000; backdrop-filter: blur(15px); }
-        .stats-panel { background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
-        .stats-panel h2 { color: #fbbf24; margin-bottom: 30px; font-size: 28px; }
-        .stat-row { display: flex; justify-content: space-between; font-size: 20px; margin-bottom: 15px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 10px; }
+        .stats-panel { background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.1); padding: 30px 20px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        .stats-panel h2 { color: #fbbf24; margin-bottom: 25px; font-size: 24px; }
+        .stat-row { display: flex; justify-content: space-between; font-size: 18px; margin-bottom: 15px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 10px; }
         
         /* Nút Test */
         .test-controls { display: flex; flex-direction: column; gap: 10px; max-width: 300px; margin: 30px auto; }
@@ -95,10 +98,10 @@
         #blue-zone { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200vw; height: 200vh; box-shadow: 0 0 0 3000px rgba(0, 100, 255, 0.2); border: 3px solid #38bdf8; border-radius: 50%; pointer-events: none; transition: width 10s linear, height 10s linear; z-index: 500; display: none; }
         #blue-zone.shrinking { width: 10vw; height: 10vw; border-color: #ef4444; box-shadow: 0 0 0 3000px rgba(239, 68, 68, 0.4); }
 
-        /* --- HỆ THỐNG RANK CSS SIÊU ĐẸP --- */
-        .rank-box-container { background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9)) !important; border: 1px solid rgba(56, 189, 248, 0.3) !important; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); overflow: hidden; position: relative; }
-        .rank-display { display: flex; align-items: center; gap: 20px; padding: 10px; }
-        .rank-shield { width: 80px; height: 80px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); position: relative; z-index: 2; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        /* --- HỆ THỐNG RANK CSS SIÊU ĐẸP (Làm gọn lại) --- */
+        .rank-box-container { background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9)) !important; border: 1px solid rgba(56, 189, 248, 0.3) !important; box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5); overflow: hidden; position: relative; }
+        .rank-display { display: flex; align-items: center; gap: 15px; padding: 5px; }
+        .rank-shield { width: 60px; height: 60px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); position: relative; z-index: 2; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
         .rank-shield::before { content: ''; position: absolute; inset: 4px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); background: rgba(0,0,0,0.4); z-index: -1; }
         
         .tier-wood { background: linear-gradient(135deg, #8B5A2B, #CD853F); box-shadow: 0 0 15px #8B5A2B; }
@@ -120,22 +123,22 @@
         .tier-champion { background: linear-gradient(135deg, #FF0000, #FFD700, #00FF00, #00FFFF, #FF00FF); background-size: 300% 300%; box-shadow: 0 0 50px #FFD700; animation: rainbowRank 3s ease infinite; }
         .tier-champion-bg { background: linear-gradient(90deg, #FF0000, #FFD700, #00FFFF, #FF00FF); background-size: 300% 300%; animation: rainbowRank 3s ease infinite; }
         
-        @keyframes grandmasterPulse { 0% { filter: drop-shadow(0 0 10px red); } 50% { filter: drop-shadow(0 0 25px orange); } 100% { filter: drop-shadow(0 0 10px red); } }
+        @keyframes grandmasterPulse { 0% { filter: drop-shadow(0 0 10px red); } 50% { filter: drop-shadow(0 0 20px orange); } 100% { filter: drop-shadow(0 0 10px red); } }
         @keyframes rainbowRank { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         
         .rank-info { flex: 1; text-align: left; }
-        .rank-name-text { font-size: 24px; font-weight: 900; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .rank-name-text { font-size: 18px; font-weight: 900; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 1px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
         .progress-wrapper { width: 100%; position: relative; }
-        .progress-track { width: 100%; height: 12px; background: rgba(0, 0, 0, 0.5); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
+        .progress-track { width: 100%; height: 10px; background: rgba(0, 0, 0, 0.5); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
         .progress-fill { height: 100%; width: 0%; border-radius: 10px; transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(255,255,255,0.5); }
-        .progress-text { margin-top: 5px; font-size: 13px; color: #94a3b8; font-weight: bold; text-align: right; font-family: monospace; }
+        .progress-text { margin-top: 5px; font-size: 12px; color: #94a3b8; font-weight: bold; text-align: right; font-family: monospace; }
         
         /* OVERLAY THĂNG HẠNG */
         #rank-up-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(20px); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
         .rank-up-content { text-align: center; position: relative; z-index: 2; animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .rank-up-title { color: #fbbf24; font-size: 30px; letter-spacing: 5px; margin-bottom: 30px; text-shadow: 0 0 20px #fbbf24; }
-        .rank-up-anim { width: 180px; height: 180px; font-size: 60px; margin: 0 auto 30px; animation: floatRank 3s ease-in-out infinite; }
-        .rank-up-name-glow { font-size: 45px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 30px rgba(255,255,255,0.8); margin-bottom: 20px; }
+        .rank-up-title { color: #fbbf24; font-size: 26px; letter-spacing: 3px; margin-bottom: 25px; text-shadow: 0 0 20px #fbbf24; }
+        .rank-up-anim { width: 150px; height: 150px; font-size: 50px; margin: 0 auto 25px; animation: floatRank 3s ease-in-out infinite; }
+        .rank-up-name-glow { font-size: 38px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 30px rgba(255,255,255,0.8); margin-bottom: 20px; }
         .epic-rays { position: absolute; top: 50%; left: 50%; width: 200vw; height: 200vw; background: repeating-conic-gradient(from 0deg, transparent 0deg 15deg, rgba(255,255,255,0.05) 15deg 30deg); transform: translate(-50%, -50%); z-index: -1; animation: spinRays 20s linear infinite; pointer-events: none; }
         
         @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; filter: blur(10px); } 100% { transform: scale(1); opacity: 1; filter: blur(0); } }
@@ -318,7 +321,6 @@
                 playersData = JSON.parse(savedData);
                 if (lastOnline) {
                     let offlineTimeMs = now - parseInt(lastOnline);
-                    // Dựa theo nhịp 8 giây mới
                     let offlineCycles = Math.floor(offlineTimeMs / 8000);
                     if (offlineCycles > 0) {
                         if (offlineCycles > 10000) offlineCycles = 10000;
@@ -467,37 +469,29 @@
             renderList('list-gun', 'gunPoints', 'Điểm Súng');
         }
 
-        // --- HỆ THỐNG MÔ PHỎNG BOT MỚI (CHUẨN XÁC VÀ BÌNH THƯỜNG HƠN) ---
         function simulateBots(isOnline = true) {
-            // Tốc độ bình thường: Mỗi nhịp sẽ có 3 đến 8 người chơi hoàn thành trận đấu
             let numPlayersFinished = Math.floor(Math.random() * 6) + 3; 
 
             for(let i = 0; i < numPlayersFinished; i++) {
-                // Chọn ngẫu nhiên 1 bot (từ vị trí 1 đến cuối mảng, bỏ qua 'me' ở vị trí 0)
                 let botIndex = Math.floor(Math.random() * (playersData.length - 1)) + 1;
                 let bot = playersData[botIndex];
                 if(!bot) continue;
                 
-                // Giả lập thứ hạng trận đấu của Bot từ Top 1 đến Top 50
                 let simulatedRank = Math.floor(Math.random() * 50) + 1;
                 
-                // Giả lập số Kills dựa trên thứ hạng cho hợp lý
                 let simulatedKills = 0;
-                if (simulatedRank === 1) simulatedKills = Math.floor(Math.random() * 8) + 5; // Top 1: 5-12 kills
-                else if (simulatedRank <= 10) simulatedKills = Math.floor(Math.random() * 5) + 2; // Top 10: 2-6 kills
-                else if (simulatedRank <= 30) simulatedKills = Math.floor(Math.random() * 3); // Top 30: 0-2 kills
-                else simulatedKills = Math.floor(Math.random() * 2); // Top 50: 0-1 kill
+                if (simulatedRank === 1) simulatedKills = Math.floor(Math.random() * 8) + 5; 
+                else if (simulatedRank <= 10) simulatedKills = Math.floor(Math.random() * 5) + 2; 
+                else if (simulatedRank <= 30) simulatedKills = Math.floor(Math.random() * 3); 
+                else simulatedKills = Math.floor(Math.random() * 2); 
 
-                // BẮT BUỘC dùng chung hàm tính điểm với người chơi để CHUẨN XÁC 100%
                 let rankPts = calculateRankPoints(simulatedRank, simulatedKills);
                 let gunPts = calculateGunPoints(simulatedRank, simulatedKills);
 
-                // Cập nhật chỉ số cho Bot
                 bot.matches += 1;
                 bot.kills += simulatedKills;
                 bot.rankPoints += rankPts;
                 
-                // Ràng buộc điểm tối đa, tối thiểu
                 if (bot.rankPoints < 0) bot.rankPoints = 0; 
                 if (bot.rankPoints > 1000000) bot.rankPoints = 1000000;
                 
@@ -513,7 +507,6 @@
             }
         }
 
-        // Tốc độ cập nhật: 8 giây 1 lần để bảng xếp hạng mượt mà, không bị nhảy loạn
         setInterval(() => simulateBots(true), 8000);
 
         function startGame() {
