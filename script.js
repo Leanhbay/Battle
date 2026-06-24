@@ -10,7 +10,7 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 let score = 0; 
-let mapSize = 5500; // ĐÃ THU NHỎ MAP XUỐNG 5500
+let mapSize = 5500;
 let environment = [];
 let collidables = []; 
 let bullets = [];
@@ -48,7 +48,6 @@ function initUI() {
     }
 }
 
-// --- MENU NHẶT ĐỒ (TRONG SUỐT) ---
 const lootMenu = document.createElement('div');
 lootMenu.id = 'loot-menu';
 lootMenu.style.position = 'fixed'; 
@@ -72,7 +71,6 @@ document.body.appendChild(lootMenu);
 
 let nearbyItems = []; 
 
-// --- NÚT NẠP ĐẠN ---
 const reloadBtn = document.createElement('div');
 reloadBtn.id = 'reload-btn';
 reloadBtn.style.position = 'absolute';
@@ -95,7 +93,6 @@ reloadBtn.style.userSelect = 'none';
 reloadBtn.innerHTML = 'NẠP';
 document.body.appendChild(reloadBtn);
 
-// --- NÚT HỒI MÁU ---
 const healBtn = document.createElement('div');
 healBtn.id = 'heal-btn';
 healBtn.style.position = 'absolute';
@@ -139,7 +136,6 @@ function startHealing() {
 
 reloadBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startReload(); }, {passive: false});
 reloadBtn.addEventListener('mousedown', (e) => { e.preventDefault(); startReload(); });
-
 healBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startHealing(); }, {passive: false});
 healBtn.addEventListener('mousedown', (e) => { e.preventDefault(); startHealing(); });
 
@@ -189,7 +185,6 @@ let zoneState = 'WAITING';
 let zonePhaseTimer = Date.now();
 let lastDamageTime = 0;
 
-// VÒNG BO UPDATE CHO MAP 5500
 const phases = [
     { wait: 90000, shrink: 45000, targetR: mapSize * 0.45, dmg: 5 },  
     { wait: 75000, shrink: 45000, targetR: mapSize * 0.25, dmg: 10 }, 
@@ -396,7 +391,8 @@ function initEnvironment() {
 
 function getFloorZ(px, py, pr) {
     let maxZ = 0; 
-    for (let obj of collidables) { 
+    for (let i = 0; i < collidables.length; i++) { 
+        let obj = collidables[i];
         let bw = obj.w || 0; let bh = obj.h || 0;
         if (px < obj.x - 300 || px > obj.x + bw + 300 || py < obj.y - 300 || py > obj.y + bh + 300) continue;
         
@@ -421,7 +417,8 @@ function circleRectCollide(cx, cy, cr, rx, ry, rw, rh) {
 }
 
 function isColliding(px, py, pr, pz = 0) {
-    for (let obj of collidables) { 
+    for (let i = 0; i < collidables.length; i++) { 
+        let obj = collidables[i];
         let bw = obj.w || 0; let bh = obj.h || 0;
         if (px < obj.x - 300 || px > obj.x + bw + 300 || py < obj.y - 300 || py > obj.y + bh + 300) continue;
         
@@ -450,9 +447,10 @@ function isColliding(px, py, pr, pz = 0) {
     return false;
 }
 
+// TỐI ƯU HIỆU NĂNG 1: GIẢM SỐ BƯỚC QUÉT LINE-OF-SIGHT CỦA BOT
 function checkLineOfSight(x1, y1, x2, y2) {
     let dx = x2 - x1; let dy = y2 - y1; let dist = Math.hypot(dx, dy);
-    let steps = Math.max(2, Math.ceil(dist / 8)); 
+    let steps = Math.max(2, Math.ceil(dist / 25)); // Chia nhỏ bước nhảy (25px thay vì 8px)
     for (let i = 1; i < steps; i++) {
         let px = x1 + (dx * i / steps); let py = y1 + (dy * i / steps);
         if (isColliding(px, py, 2, 0)) return false; 
@@ -665,7 +663,8 @@ function update() {
     if (keys['a']) moveX -= currentSpeed; if (keys['d']) moveX += currentSpeed;
     if (isMobile) { moveX = joyX * currentSpeed; moveY = joyY * currentSpeed; }
 
-    let steps = 5, stepX = moveX / steps, stepY = moveY / steps;
+    // TỐI ƯU HIỆU NĂNG 2: Giảm số vòng lặp cập nhật bước đi của Player từ 5 -> 2
+    let steps = 2, stepX = moveX / steps, stepY = moveY / steps;
     for (let i = 0; i < steps; i++) {
         if (!isColliding(player.x + stepX, player.y, player.radius, player.z)) player.x += stepX;
         if (!isColliding(player.x, player.y + stepY, player.radius, player.z)) player.y += stepY;
@@ -708,6 +707,7 @@ function update() {
         } else if (player.reserveAmmo > 0) { startReload(); }
     }
 
+    // TỐI ƯU HIỆU NĂNG 3: GIÃN CÁCH TẦN SUẤT XỬ LÝ AI CỦA BOTS
     for (let i = enemies.length - 1; i >= 0; i--) {
         let e = enemies[i];
         
@@ -722,7 +722,8 @@ function update() {
 
         let moveEx = 0, moveEy = 0;
 
-        for (let obj of collidables) { 
+        for (let j = 0; j < collidables.length; j++) { 
+            let obj = collidables[j];
             let bw = obj.w || 0; let bh = obj.h || 0;
             if (obj.type === 'house' && e.x > obj.x - 200 && e.x < obj.x + bw + 200 && e.y > obj.y - 200 && e.y < obj.y + bh + 200) {
                 let doorCx, doorCy;
@@ -758,7 +759,8 @@ function update() {
         else if (!e.hasWeapon) {
             if (!e.targetWeapon || environment.indexOf(e.targetWeapon) === -1) {
                 let wMinD = Infinity, nearestW = null;
-                for (let obj of environment) {
+                for (let j = 0; j < environment.length; j++) {
+                    let obj = environment[j];
                     if (obj.type === 'weapon') {
                         let d = Math.hypot(e.x - obj.x, e.y - obj.y);
                         if (d < wMinD) { wMinD = d; nearestW = obj; }
@@ -791,31 +793,43 @@ function update() {
             if (now >= e.reloadEndTime) { e.reloading = false; e.currentAmmo = 31; }
         } 
         else {
-            let possibleTargets = [];
-            if (player.hp > 0 && player.landed) {
-                possibleTargets.push({ entity: player, d: Math.hypot(e.x - player.x, e.y - player.y) });
-            }
-            for (let other of enemies) {
-                if (other === e || !other.landed) continue;
-                possibleTargets.push({ entity: other, d: Math.hypot(e.x - other.x, e.y - other.y) });
-            }
-            possibleTargets.sort((a, b) => a.d - b.d); 
-
-            let target = null;
-            let tMinD = Infinity;
-            let hasLoS = false;
-            
-            for (let pt of possibleTargets) {
-                if (pt.d > 1200) break; 
-                if (checkLineOfSight(e.x, e.y, pt.entity.x, pt.entity.y)) {
-                    target = pt.entity; tMinD = pt.d; hasLoS = true; break;
+            // Giãn cách việc quét mục tiêu cực nặng: Chỉ thực hiện mỗi 0.4s (stagger theo ID để tránh kẹt FPS)
+            if (!e.lastAiUpdate || now - e.lastAiUpdate > 400 + (e.id * 10)) {
+                e.lastAiUpdate = now;
+                let possibleTargets = [];
+                if (player.hp > 0 && player.landed) {
+                    possibleTargets.push({ entity: player, d: Math.hypot(e.x - player.x, e.y - player.y) });
                 }
-            }
-            if (!target && possibleTargets.length > 0) {
-                target = possibleTargets[0].entity; tMinD = possibleTargets[0].d; hasLoS = false;
+                for (let other of enemies) {
+                    if (other === e || !other.landed) continue;
+                    possibleTargets.push({ entity: other, d: Math.hypot(e.x - other.x, e.y - other.y) });
+                }
+                possibleTargets.sort((a, b) => a.d - b.d); 
+
+                let target = null;
+                let tMinD = Infinity;
+                let hasLoS = false;
+                
+                for (let pt of possibleTargets) {
+                    if (pt.d > 1200) break; 
+                    if (checkLineOfSight(e.x, e.y, pt.entity.x, pt.entity.y)) {
+                        target = pt.entity; tMinD = pt.d; hasLoS = true; break;
+                    }
+                }
+                if (!target && possibleTargets.length > 0) {
+                    target = possibleTargets[0].entity; tMinD = possibleTargets[0].d; hasLoS = false;
+                }
+                e.currentTarget = target;
+                e.currentTMinD = tMinD;
+                e.currentHasLoS = hasLoS;
             }
 
-            if (target && tMinD < 1200) {
+            let target = e.currentTarget;
+            let tMinD = e.currentTMinD;
+            let hasLoS = e.currentHasLoS;
+
+            if (target && target.hp > 0 && tMinD < 1200) {
+                tMinD = Math.hypot(e.x - target.x, e.y - target.y); // Liên tục update khoảng cách
                 if (hasLoS) { 
                     e.angle = Math.atan2(target.y - e.y, target.x - e.x); 
                     if (tMinD > 400) { moveEx = Math.cos(e.angle) * e.speed; moveEy = Math.sin(e.angle) * e.speed; } 
@@ -855,7 +869,8 @@ function update() {
             }
         }
 
-        let stepsE = 5, stepEx = moveEx / stepsE, stepEy = moveEy / stepsE;
+        // TỐI ƯU BƯỚC ĐI CỦA BOTS: Giảm từ 5 vòng lặp xuống 2
+        let stepsE = 2, stepEx = moveEx / stepsE, stepEy = moveEy / stepsE;
         for (let s = 0; s < stepsE; s++) {
             if (!isColliding(e.x + stepEx, e.y, e.radius, 0)) e.x += stepEx;
             if (!isColliding(e.x, e.y + stepEy, e.radius, 0)) e.y += stepEy;
@@ -1094,9 +1109,15 @@ function drawEntity(entity, isPlayer) {
         let strings = [[-pSize*0.8, -pSize*0.5], [-pSize*0.8, pSize*0.5], [0, -pSize*0.9], [0, pSize*0.9], [pSize*0.8, -pSize*0.5], [pSize*0.8, pSize*0.5]];
         ctx.beginPath(); for(let pt of strings) { ctx.moveTo(0, 0); ctx.lineTo(pt[0], pt[1]); } ctx.stroke();
 
-        let grad = ctx.createRadialGradient(0, 0, 0, 0, 0, pSize);
-        grad.addColorStop(0, '#E74C3C'); grad.addColorStop(1, '#922B21'); 
-        ctx.fillStyle = grad; ctx.beginPath(); ctx.arc(0, 0, pSize, 0, Math.PI * 2); ctx.fill();
+        // TỐI ƯU Caching dù nhảy
+        if (!window.paraGrad) {
+            window.paraGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 100);
+            window.paraGrad.addColorStop(0, '#E74C3C'); window.paraGrad.addColorStop(1, '#922B21'); 
+        }
+        ctx.save();
+        ctx.scale(pSize/100, pSize/100);
+        ctx.fillStyle = window.paraGrad; ctx.beginPath(); ctx.arc(0, 0, 100, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
 
         ctx.strokeStyle = '#641E16'; ctx.lineWidth = 2;
         for(let i = 0; i < 8; i++) { ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.cos(i*Math.PI/4)*pSize, Math.sin(i*Math.PI/4)*pSize); ctx.stroke(); }
@@ -1128,15 +1149,20 @@ function drawEntity(entity, isPlayer) {
         ctx.fillStyle = '#FFC3A0'; ctx.beginPath(); ctx.arc(lArmX, lArmY, 4, 0, Math.PI*2); ctx.fill();
         ctx.beginPath(); ctx.arc(rArmX, rArmY, 4, 0, Math.PI*2); ctx.fill();
 
-        let shoulderGrad = ctx.createLinearGradient(-15, -15, 15, 15);
-        if(isPlayer) { shoulderGrad.addColorStop(0, '#3498DB'); shoulderGrad.addColorStop(1, '#21618C'); }
-        else { shoulderGrad.addColorStop(0, '#E74C3C'); shoulderGrad.addColorStop(1, '#7B241C'); }
-        ctx.fillStyle = shoulderGrad; ctx.beginPath(); ctx.ellipse(0, 0, entity.radius + 2, entity.radius - 4, 0, 0, Math.PI*2); ctx.fill();
+        // TỐI ƯU Caching nhân vật
+        if (!entity.shoulderGrad) {
+            entity.shoulderGrad = ctx.createLinearGradient(-15, -15, 15, 15);
+            if(isPlayer) { entity.shoulderGrad.addColorStop(0, '#3498DB'); entity.shoulderGrad.addColorStop(1, '#21618C'); }
+            else { entity.shoulderGrad.addColorStop(0, '#E74C3C'); entity.shoulderGrad.addColorStop(1, '#7B241C'); }
+        }
+        ctx.fillStyle = entity.shoulderGrad; ctx.beginPath(); ctx.ellipse(0, 0, entity.radius + 2, entity.radius - 4, 0, 0, Math.PI*2); ctx.fill();
         
-        let headGrad = ctx.createRadialGradient(-2, -2, 2, 0, 0, 10);
-        if(isPlayer) { headGrad.addColorStop(0, '#FFE0BD'); headGrad.addColorStop(1, '#E0AC69'); }
-        else { headGrad.addColorStop(0, '#AAB7B8'); headGrad.addColorStop(1, '#515A5A'); } 
-        ctx.fillStyle = headGrad; ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI*2); ctx.fill();
+        if (!entity.headGrad) {
+            entity.headGrad = ctx.createRadialGradient(-2, -2, 2, 0, 0, 10);
+            if(isPlayer) { entity.headGrad.addColorStop(0, '#FFE0BD'); entity.headGrad.addColorStop(1, '#E0AC69'); }
+            else { entity.headGrad.addColorStop(0, '#AAB7B8'); entity.headGrad.addColorStop(1, '#515A5A'); } 
+        }
+        ctx.fillStyle = entity.headGrad; ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI*2); ctx.fill();
     }
     ctx.restore();
 }
@@ -1158,21 +1184,27 @@ function drawCrate(c) {
     ctx.restore();
 }
 
+// TỐI ƯU HIỆU NĂNG 4: CACHING GỐC CÂY
 function drawTreeTrunk(t) {
     ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.beginPath(); ctx.ellipse(t.x + t.size*0.4, t.y + t.size*0.3, t.size, t.size*0.6, 0, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle = '#271915'; ctx.beginPath(); ctx.ellipse(t.x, t.y, 10, 5, 0, 0, Math.PI*2); ctx.fill();
-    let trunkGrad = ctx.createLinearGradient(t.x - 10, 0, t.x + 10, 0); 
-    trunkGrad.addColorStop(0, '#3E2723'); trunkGrad.addColorStop(0.5, '#5D4037'); trunkGrad.addColorStop(1, '#271915'); 
-    ctx.fillStyle = trunkGrad; ctx.fillRect(t.x - 10, t.y - t.size - 10, 20, t.size + 10);
+    if (!t.trunkGrad) {
+        t.trunkGrad = ctx.createLinearGradient(t.x - 10, 0, t.x + 10, 0); 
+        t.trunkGrad.addColorStop(0, '#3E2723'); t.trunkGrad.addColorStop(0.5, '#5D4037'); t.trunkGrad.addColorStop(1, '#271915'); 
+    }
+    ctx.fillStyle = t.trunkGrad; ctx.fillRect(t.x - 10, t.y - t.size - 10, 20, t.size + 10);
 }
 
+// TỐI ƯU HIỆU NĂNG 5: CACHING TÁN CÂY
 function drawTreeCanopy(t) {
     let yOffset = t.y - t.size - 10; 
     let wind = Math.sin(Date.now() / 1200 + t.x / 100) * 0.08;
     ctx.save(); ctx.translate(t.x, yOffset); ctx.rotate(wind);
-    let canopyGrad = ctx.createRadialGradient(-t.size*0.2, -t.size*0.2, t.size*0.1, 0, 0, t.size*1.2); 
-    canopyGrad.addColorStop(0, '#8BC34A'); canopyGrad.addColorStop(0.7, '#33691E'); canopyGrad.addColorStop(1, '#1B5E20'); 
-    ctx.fillStyle = canopyGrad; 
+    if (!t.canopyGrad) {
+        t.canopyGrad = ctx.createRadialGradient(-t.size*0.2, -t.size*0.2, t.size*0.1, 0, 0, t.size*1.2); 
+        t.canopyGrad.addColorStop(0, '#8BC34A'); t.canopyGrad.addColorStop(0.7, '#33691E'); t.canopyGrad.addColorStop(1, '#1B5E20'); 
+    }
+    ctx.fillStyle = t.canopyGrad; 
     ctx.beginPath(); ctx.arc(0, 0, t.size, 0, Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.arc(-t.size*0.4, t.size*0.3, t.size * 0.7, 0, Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.arc(t.size*0.4, t.size*0.3, t.size * 0.7, 0, Math.PI*2); ctx.fill();
@@ -1221,18 +1253,28 @@ function drawHouse(h) {
     }
 }
 
+// TỐI ƯU HIỆU NĂNG 6: CACHING ĐÁ
 function drawRock(r) {
     ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.ellipse(r.x + 8, r.y + 8, r.size, r.size*0.7, 0, 0, Math.PI*2); ctx.fill();
-    let rGrad = ctx.createLinearGradient(r.x - r.size, r.y - r.size, r.x + r.size, r.y + r.size); rGrad.addColorStop(0, '#BDC3C7'); rGrad.addColorStop(1, '#566573'); ctx.fillStyle = rGrad;
+    if (!r.rGrad) {
+        r.rGrad = ctx.createLinearGradient(r.x - r.size, r.y - r.size, r.x + r.size, r.y + r.size); 
+        r.rGrad.addColorStop(0, '#BDC3C7'); r.rGrad.addColorStop(1, '#566573'); 
+    }
+    ctx.fillStyle = r.rGrad;
     ctx.beginPath(); ctx.moveTo(r.x, r.y - r.size); ctx.lineTo(r.x + r.size*0.8, r.y - r.size*0.4); ctx.lineTo(r.x + r.size, r.y + r.size*0.5); ctx.lineTo(r.x - r.size*0.5, r.y + r.size*0.8); ctx.lineTo(r.x - r.size, r.y); ctx.fill();
     ctx.fillStyle = 'rgba(255,255,255,0.15)'; ctx.beginPath(); ctx.moveTo(r.x, r.y - r.size); ctx.lineTo(r.x + r.size*0.8, r.y - r.size*0.4); ctx.lineTo(r.x, r.y); ctx.fill();
 }
 
+// TỐI ƯU HIỆU NĂNG 7: CACHING BỤI CỎ
 function drawBush(b) {
     let wind = Math.sin(Date.now() / 1000 + b.x / 50) * 0.05;
     ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(wind);
     ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(3, 3, b.size, b.size*0.6, 0, 0, Math.PI*2); ctx.fill();
-    let bushGrad = ctx.createRadialGradient(0, -b.size*0.2, 0, 0, 0, b.size); bushGrad.addColorStop(0, '#8BC34A'); bushGrad.addColorStop(1, '#33691E'); ctx.fillStyle = bushGrad;
+    if (!b.bushGrad) {
+        b.bushGrad = ctx.createRadialGradient(0, -b.size*0.2, 0, 0, 0, b.size); 
+        b.bushGrad.addColorStop(0, '#8BC34A'); b.bushGrad.addColorStop(1, '#33691E'); 
+    }
+    ctx.fillStyle = b.bushGrad;
     [[-1,0], [1,0], [0,-1], [0.5, 0.5], [-0.5, 0.5]].forEach(offset => { ctx.beginPath(); ctx.arc(offset[0]*b.size*0.5, offset[1]*b.size*0.5, b.size*0.6, 0, Math.PI*2); ctx.fill(); });
     ctx.restore();
 }
