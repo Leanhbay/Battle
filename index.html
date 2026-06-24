@@ -15,15 +15,26 @@
         ::-webkit-scrollbar-thumb:hover { background: #38bdf8; }
         
         /* --- CONTAINER QUẢN LÝ MÀN HÌNH --- */
-        #lobby-container, #game-container, #match-stats { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
-        #lobby-container.active, #match-stats.active { display: flex; flex-direction: column; }
+        #auth-container, #lobby-container, #game-container, #match-stats { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 1; }
+        #auth-container.active, #lobby-container.active, #match-stats.active { display: flex; flex-direction: column; }
         #game-container.active { display: block; z-index: 5; background-color: #4A6E3B; }
+
+        /* --- HỆ THỐNG TÀI KHOẢN --- */
+        #auth-container { justify-content: center; align-items: center; background: rgba(2, 6, 23, 0.95); z-index: 9999; }
+        .auth-box { background: rgba(30, 41, 59, 0.9); padding: 40px; border-radius: 20px; text-align: center; border: 1px solid rgba(56, 189, 248, 0.3); box-shadow: 0 0 30px rgba(0,0,0,0.8); width: 90%; max-width: 350px; }
+        .auth-box h2 { color: #fbbf24; margin-bottom: 25px; font-size: 24px; text-shadow: 0 0 10px rgba(251,191,36,0.5); }
+        .auth-input { width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #475569; background: rgba(15, 23, 42, 0.6); color: white; outline: none; font-size: 16px; }
+        .auth-input:focus { border-color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.3); }
+        .auth-btn { width: 100%; padding: 15px; margin-bottom: 15px; background: linear-gradient(45deg, #0284c7, #3b82f6); border: none; color: white; font-weight: 900; font-size: 16px; border-radius: 10px; cursor: pointer; transition: 0.3s; }
+        .auth-btn:hover { filter: brightness(1.2); transform: translateY(-2px); }
+        .auth-btn.register { background: linear-gradient(45deg, #059669, #10b981); margin-bottom: 0; }
         
         /* --- CSS SẢNH LOBBY --- */
         .lobby-nav { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; padding: 12px; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5); z-index: 10; }
         .nav-btn { background: rgba(255, 255, 255, 0.05); color: #94a3b8; border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s; text-transform: uppercase; font-size: 11px; letter-spacing: 1px; }
         .nav-btn:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
         .nav-btn.active { color: #000; background: linear-gradient(45deg, #fbbf24, #f59e0b); border-color: #fbbf24; box-shadow: 0 0 15px rgba(251, 191, 36, 0.4); }
+        .nav-btn.logout { background: linear-gradient(45deg, #dc2626, #b91c1c); color: white; border: none; }
         
         .tab-content { display: none; flex: 1; padding: 15px; max-width: 800px; margin: 0 auto; width: 100%; overflow-y: auto; overflow-x: hidden; }
         .tab-content.active { display: block; animation: fadeInZoom 0.4s ease-out; }
@@ -158,19 +169,32 @@
 </head>
 <body>
 
+    <!-- MÀN HÌNH ĐĂNG NHẬP / TẠO TÀI KHOẢN -->
+    <div id="auth-container">
+        <div class="auth-box">
+            <h2>🎮 eSports Survival</h2>
+            <input type="text" id="auth-user" class="auth-input" placeholder="Tên Đăng Nhập / Tên Game" maxlength="15">
+            <input type="password" id="auth-pwd" class="auth-input" placeholder="Mật Khẩu">
+            <button class="auth-btn" onclick="login()">ĐĂNG NHẬP</button>
+            <button class="auth-btn register" onclick="register()">TẠO TÀI KHOẢN MỚI</button>
+            <p style="font-size: 12px; color: #94a3b8; margin-top: 15px;">Dữ liệu tài khoản được lưu trên thiết bị của bạn.</p>
+        </div>
+    </div>
+
     <!-- MÀN HÌNH SẢNH CHỜ (LOBBY) -->
-    <div id="lobby-container" class="active">
+    <div id="lobby-container">
         <nav class="lobby-nav">
             <button class="nav-btn active" onclick="switchTab('profile')">Hồ Sơ Của Tôi</button>
             <button class="nav-btn" onclick="switchTab('rank')">BXH Rank</button>
             <button class="nav-btn" onclick="switchTab('kills')">BXH Kills</button>
             <button class="nav-btn" onclick="switchTab('gun')">BXH Súng</button>
+            <button class="nav-btn logout" onclick="logout()">Đăng Xuất</button>
         </nav>
 
         <div class="tab-content active" id="tab-profile">
             <div class="profile-header">
-                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Lẻ Anh Bảy&backgroundColor=b6e3f4" alt="Avatar" class="main-avatar">
-                <h2>Tuyển Thủ: <span class="highlight">Lẻ Anh Bảy</span></h2>
+                <img src="" alt="Avatar" class="main-avatar" id="my-avatar-img">
+                <h2>Tuyển Thủ: <span class="highlight" id="my-player-name">...</span></h2>
             </div>
             
             <div class="stats-grid">
@@ -196,7 +220,9 @@
                 <div class="stat-box">Điểm Súng<br><strong id="my-gun-points" class="glow-text">0</strong></div>
                 <div class="stat-box">Tổng Top 1<br><strong id="my-top1" class="glow-text">0</strong></div>
             </div>
-            <button class="start-btn pulse-anim" onclick="startGame()">VÀO TRẬN NGAY</button>
+            
+            <button id="start-btn" class="start-btn pulse-anim" onclick="startGame()">VÀO TRẬN NGAY</button>
+            <button id="reconnect-btn" class="start-btn pulse-anim" onclick="reconnectMatch()" style="display:none; background: linear-gradient(45deg, #059669, #10b981);">KẾT NỐI LẠI TRẬN (ĐANG DỞ)</button>
         </div>
 
         <div class="tab-content" id="tab-rank">
@@ -217,7 +243,7 @@
     <div id="game-container">
         <div id="ui-layer">
             <h1>BATTLE ROYALE 2.5D</h1>
-            <p>Trạng thái: <span id="statusText" style="color: #00FF00;">Đang nhảy dù...</span></p>
+            <p>Trạng thái: <span id="statusText" style="color: #00FF00;">Đang khởi tạo bản đồ...</span></p>
             <p id="aliveTextContainer">Kills: <span id="scoreText" style="color: #FFD700;">0</span> | Còn: <span id="aliveText" style="color: #FF0000;">50</span> | HP: <span id="hpText">100</span><br>Đạn: <span id="ammoText">0/0</span> | Balo: <span id="bpText">0</span>%</p>
             <p>Vòng bo: <span id="zoneText" style="color: #FFF;">Đang chờ...</span></p>
         </div>
@@ -269,7 +295,7 @@
 
     <script>
         // =========================================================================
-        // PHẦN 1: HỆ THỐNG LOBBY VÀ CƠ SỞ DỮ LIỆU
+        // PHẦN 1: HỆ THỐNG TÀI KHOẢN & SẢNH CHỜ
         // =========================================================================
         
         document.addEventListener('contextmenu', e => e.preventDefault());
@@ -277,6 +303,9 @@
             if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73) || (e.ctrlKey && e.keyCode == 85)) { e.preventDefault(); }
         });
 
+        let usersDB = JSON.parse(localStorage.getItem('esports_users_db')) || {};
+        let currentUser = localStorage.getItem('esports_current_user');
+        
         let tempMatchResult = { rankPoints: 0, kills: 0, gunPoints: 0, rank: 0 };
         let playersData = [];
         let gameActive = false; 
@@ -311,52 +340,105 @@
         const botNamesList = [
             "FakerVN", "NoobMaster", "ProSniper", "ChickenLover", "DarkKnight", "ShadowNinja", "GhostRider", 
             "DragonSlayer", "IronMan", "Captain", "Thor", "Hulk", "BlackWidow", "Hawkeye", "Superman", 
-            "Batman", "Flash", "Aquaman", "WonderWoman", "Cyborg", "Joker", "HarleyQuinn", "Thanos", 
-            "Loki", "Ultron", "Venom", "Deadpool", "Wolverine", "Magneto", "ProfessorX", "Storm", 
-            "JeanGrey", "Cyclops", "Beast", "Nightcrawler", "Rogue", "Gambit", "Iceman", "Colossus", 
-            "KittyPryde", "EmmaFrost", "Mystique", "Sabretooth", "Juggernaut", "Toad", "Blob", "Pyro"
+            "Batman", "Flash", "Aquaman", "WonderWoman", "Cyborg", "Joker", "HarleyQuinn", "Thanos"
         ];
 
-        function calculateRankPoints(rank, kills) {
-            let basePoints = 0;
-            if (rank === 1) basePoints = 20;
-            else if (rank === 2) basePoints = 15;
-            else if (rank === 3) basePoints = 10;
-            else if (rank === 4) basePoints = 8;
-            else if (rank === 5) basePoints = 5;
-            else if (rank >= 6 && rank <= 15) basePoints = 1;
-            else if (rank >= 16 && rank <= 21) basePoints = 0;
-            else if (rank >= 22 && rank <= 30) basePoints = -5;
-            else if (rank >= 31 && rank <= 40) basePoints = -10;
-            else if (rank >= 41 && rank <= 50) basePoints = -25;
-            return basePoints + kills;
+        window.onload = function() {
+            if(currentUser && usersDB[currentUser]) {
+                finishLogin();
+            } else {
+                document.getElementById('auth-container').classList.add('active');
+            }
+        };
+
+        function login() {
+            let u = document.getElementById('auth-user').value.trim();
+            let p = document.getElementById('auth-pwd').value;
+            if(!u || !p) return alert("Vui lòng điền đủ thông tin!");
+            if(usersDB[u] && usersDB[u].pwd === p) {
+                currentUser = u;
+                localStorage.setItem('esports_current_user', u);
+                finishLogin();
+            } else {
+                alert("Sai tên đăng nhập hoặc mật khẩu!");
+            }
         }
 
-        function calculateGunPoints(rank, kills) {
-            let base = kills * 2;
-            if (rank === 1) return base + 3;
-            if (rank === 2) return base + 2;
-            if (rank === 3) return base + 1;
-            return base;
+        function register() {
+            let u = document.getElementById('auth-user').value.trim();
+            let p = document.getElementById('auth-pwd').value;
+            if(!u || !p) return alert("Vui lòng điền đủ thông tin để tạo tài khoản!");
+            if(usersDB[u]) return alert("Tên nhân vật đã có người sử dụng!");
+            
+            usersDB[u] = {
+                pwd: p, name: u, rankPoints: 0, kills: 0, matches: 0, gunPoints: 0, top1: 0,
+                avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${u}&backgroundColor=b6e3f4`
+            };
+            localStorage.setItem('esports_users_db', JSON.stringify(usersDB));
+            alert("Tạo tài khoản thành công! Đang tự động đăng nhập...");
+            currentUser = u;
+            localStorage.setItem('esports_current_user', u);
+            finishLogin();
+        }
+
+        function logout() {
+            if(confirm("Bạn có chắc muốn đăng xuất?")) {
+                localStorage.removeItem('esports_current_user');
+                location.reload();
+            }
+        }
+
+        function finishLogin() {
+            document.getElementById('auth-container').classList.remove('active');
+            document.getElementById('lobby-container').classList.add('active');
+            loadData();
+            checkActiveMatch();
+        }
+
+        function checkActiveMatch() {
+            let activeMatch = localStorage.getItem('esports_active_match_' + currentUser);
+            if(activeMatch) {
+                document.getElementById('start-btn').style.display = 'none';
+                document.getElementById('reconnect-btn').style.display = 'block';
+            } else {
+                document.getElementById('start-btn').style.display = 'block';
+                document.getElementById('reconnect-btn').style.display = 'none';
+            }
         }
 
         function loadData() {
-            let savedData = localStorage.getItem('esports_game_data_v3');
-            let lastOnline = localStorage.getItem('esports_lastOnline_v3');
-            let now = Date.now();
-
-            if (savedData) {
-                playersData = JSON.parse(savedData);
-                if (lastOnline) {
-                    let offlineTimeMs = now - parseInt(lastOnline);
-                    let offlineCycles = Math.floor(offlineTimeMs / 5000); 
-                    if (offlineCycles > 0) {
-                        if (offlineCycles > 10000) offlineCycles = 10000;
-                        for (let i = 0; i < offlineCycles; i++) simulateBots(false);
-                    }
-                }
+            let savedBots = localStorage.getItem('esports_bots_data');
+            if (savedBots) {
+                playersData = JSON.parse(savedBots);
             } else {
-                initBots();
+                playersData = [];
+                let shuffledNames = botNamesList.sort(() => 0.5 - Math.random());
+                const bgColors = ['b6e3f4','c0aede','ffdfbf','d1d4f9','ffd5dc', 'ffc0cb', 'a0cecb'];
+                for(let i = 1; i <= 1000; i++) {
+                    let baseName = shuffledNames[i % shuffledNames.length];
+                    let botName = i > shuffledNames.length ? baseName + "_" + Math.floor(Math.random() * 9999) : baseName;
+                    playersData.push({
+                        id: "bot_" + i, name: botName, rankPoints: 0, kills: 0, matches: 0, gunPoints: 0, top1: 0,
+                        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${botName}&backgroundColor=${bgColors[Math.floor(Math.random() * bgColors.length)]}`
+                    });
+                }
+            }
+
+            // Gắn player thật vào mảng
+            let userData = usersDB[currentUser];
+            playersData.unshift({
+                id: "me", name: userData.name, rankPoints: userData.rankPoints, kills: userData.kills,
+                matches: userData.matches, gunPoints: userData.gunPoints, top1: userData.top1, avatar: userData.avatar
+            });
+
+            // Bù thời gian offline cho Bots
+            let lastOnline = localStorage.getItem('esports_lastOnline_bots');
+            if (lastOnline) {
+                let offlineTimeMs = Date.now() - parseInt(lastOnline);
+                let offlineCycles = Math.floor(offlineTimeMs / 5000); 
+                if (offlineCycles > 0 && offlineCycles < 10000) {
+                    for (let i = 0; i < offlineCycles; i++) simulateBots(false);
+                }
             }
 
             saveData();
@@ -364,35 +446,40 @@
             renderLeaderboards();
         }
 
-        function initBots() {
-            playersData = [
-                { id: "me", name: "Lẻ Anh Bảy", rankPoints: 0, kills: 0, matches: 0, gunPoints: 0, top1: 0, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lẻ Anh Bảy&backgroundColor=b6e3f4" }
-            ];
-
-            let shuffledNames = botNamesList.sort(() => 0.5 - Math.random());
-            const bgColors = ['b6e3f4','c0aede','ffdfbf','d1d4f9','ffd5dc', 'ffc0cb', 'a0cecb'];
-
-            // Nâng cấp lên chính xác 1000 Bot cày rank khốc liệt
-            for(let i = 1; i <= 1000; i++) {
-                let baseName = shuffledNames[i % shuffledNames.length];
-                let botName = i > shuffledNames.length ? baseName + "_" + Math.floor(Math.random() * 9999) : baseName;
-                playersData.push({
-                    id: "bot_" + i, name: botName, rankPoints: 0, kills: 0, matches: 0, gunPoints: 0, top1: 0,
-                    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${botName}&backgroundColor=${bgColors[Math.floor(Math.random() * bgColors.length)]}`
-                });
+        function saveData() {
+            let myData = playersData.find(p => p.id === "me");
+            if (myData && currentUser) {
+                usersDB[currentUser].rankPoints = myData.rankPoints;
+                usersDB[currentUser].kills = myData.kills;
+                usersDB[currentUser].matches = myData.matches;
+                usersDB[currentUser].gunPoints = myData.gunPoints;
+                usersDB[currentUser].top1 = myData.top1;
+                localStorage.setItem('esports_users_db', JSON.stringify(usersDB));
             }
+            
+            let botsOnly = playersData.filter(p => p.id !== "me");
+            localStorage.setItem('esports_bots_data', JSON.stringify(botsOnly));
+            localStorage.setItem('esports_lastOnline_bots', Date.now().toString());
         }
 
-        function saveData() {
-            localStorage.setItem('esports_game_data_v3', JSON.stringify(playersData));
-            localStorage.setItem('esports_lastOnline_v3', Date.now().toString());
+        function calculateRankPoints(rank, kills) {
+            let basePoints = 0;
+            if (rank === 1) basePoints = 20; else if (rank === 2) basePoints = 15; else if (rank === 3) basePoints = 10;
+            else if (rank === 4) basePoints = 8; else if (rank === 5) basePoints = 5; else if (rank >= 6 && rank <= 15) basePoints = 1;
+            else if (rank >= 16 && rank <= 21) basePoints = 0; else if (rank >= 22 && rank <= 30) basePoints = -5;
+            else if (rank >= 31 && rank <= 40) basePoints = -10; else if (rank >= 41 && rank <= 50) basePoints = -25;
+            return basePoints + kills;
+        }
+
+        function calculateGunPoints(rank, kills) {
+            let base = kills * 2;
+            if (rank === 1) return base + 3; if (rank === 2) return base + 2; if (rank === 3) return base + 1;
+            return base;
         }
 
         function getRankData(points) {
             if (points > 1000000) points = 1000000;
-            for (let r of RANK_TIERS) {
-                if (points >= r.min && points <= r.max) return r;
-            }
+            for (let r of RANK_TIERS) { if (points >= r.min && points <= r.max) return r; }
             return RANK_TIERS[RANK_TIERS.length - 1];
         }
 
@@ -401,6 +488,8 @@
             let currentPts = myData.rankPoints;
             let rankInfo = getRankData(currentPts);
 
+            document.getElementById('my-player-name').innerText = myData.name;
+            document.getElementById('my-avatar-img').src = myData.avatar;
             document.getElementById('my-matches').innerText = myData.matches;
             document.getElementById('my-kills').innerText = myData.kills;
             document.getElementById('my-gun-points').innerText = myData.gunPoints;
@@ -413,7 +502,7 @@
             badge.className = `rank-shield ${rankInfo.css}`;
             badge.innerHTML = `<span>${rankInfo.short}</span>`;
             rankName.innerText = rankInfo.name;
-            rankName.style.color = rankInfo.color; // Sử dụng mã màu trực tiếp an toàn hơn mã computedStyle cũ
+            rankName.style.color = rankInfo.color; 
 
             fill.className = `progress-fill ${rankInfo.css}-bg`;
             document.getElementById('rank-max-pts').innerText = rankInfo.max === 1000000 ? "MAX" : rankInfo.max;
@@ -424,15 +513,13 @@
         function animateScoreCounter(elementId, start, end, min, max) {
             let obj = document.getElementById(elementId);
             let fill = document.getElementById('rank-progress-fill');
-            let duration = 1500;
-            let startTime = null;
+            let duration = 1500; let startTime = null;
 
             function step(timestamp) {
                 if (!startTime) startTime = timestamp;
                 let progress = Math.min((timestamp - startTime) / duration, 1);
                 let currentVal = Math.floor(progress * (end - start) + start);
                 obj.innerHTML = currentVal;
-                
                 let percent = max === 1000000 ? 100 : ((currentVal - min) / (max - min)) * 100;
                 fill.style.width = `${Math.max(0, Math.min(100, percent))}%`;
 
@@ -520,41 +607,119 @@
 
         setInterval(() => simulateBots(true), 5000);
 
+
         // =========================================================================
-        // PHẦN 2: CHUYỂN TIẾP VÀ KẾT THÚC GAME (ĐÃ FIX LỖI KHÔNG LƯU)
+        // PHẦN 2: CHUYỂN TIẾP TRẬN ĐẤU VÀ TÍNH NĂNG TỰ ĐỘNG LƯU (RECONNECT)
         // =========================================================================
 
         function startGame() {
             document.getElementById('lobby-container').classList.remove('active');
             document.getElementById('game-container').classList.add('active');
-            
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            
-            gameActive = true;
-            initEnvironment();
-            requestAnimationFrame(gameLoop);
+            document.getElementById('statusText').innerText = "Đang khởi tạo bản đồ...";
+            document.getElementById('statusText').style.color = "#FFD700";
+
+            // Fix treo màn hình: Đưa logic map nặng vào setTimeout để UI kịp load
+            setTimeout(() => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                gameActive = true;
+                initEnvironment();
+                requestAnimationFrame(gameLoop);
+            }, 100);
+        }
+
+        function reconnectMatch() {
+            let dataStr = localStorage.getItem('esports_active_match_' + currentUser);
+            if(!dataStr) return startGame(); 
+
+            document.getElementById('lobby-container').classList.remove('active');
+            document.getElementById('game-container').classList.add('active');
+            document.getElementById('statusText').innerText = "Đang khôi phục trận đấu...";
+            document.getElementById('statusText').style.color = "#FFD700";
+
+            setTimeout(() => {
+                try {
+                    let data = JSON.parse(dataStr);
+                    Object.assign(player, data.player);
+                    enemies = data.enemies;
+                    environment = data.environment;
+                    score = data.score;
+                    oldZone = data.zones.oldZone;
+                    currentZone = data.zones.currentZone;
+                    safeZone = data.zones.safeZone;
+                    zoneState = data.zones.zoneState;
+                    currentPhase = data.zones.currentPhase;
+                    zonePhaseTimer = data.zones.zonePhaseTimer;
+                    
+                    // Khôi phục liên kết vòng lặp (Circular reference)
+                    environment.forEach(obj => {
+                        if(obj.inHouseId !== undefined && obj.inHouseId !== null) {
+                            obj.inHouse = environment[obj.inHouseId];
+                        }
+                    });
+                    
+                    bullets = data.bullets.map(b => ({
+                        ...b, owner: b.ownerIsPlayer ? player : (enemies.length > 0 ? enemies[0] : null)
+                    }));
+                    
+                    collidables = environment.filter(obj => obj.type === 'house' || obj.type === 'crate' || obj.type === 'tree' || obj.type === 'rock');
+                    
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                    gameActive = true;
+                    
+                    document.getElementById('scoreText').innerText = score;
+                    document.getElementById('hpText').innerText = player.hp;
+                    
+                    requestAnimationFrame(gameLoop);
+                } catch(e) {
+                    console.error("Lỗi Reconnect:", e);
+                    alert("Trận đấu cũ bị lỗi dữ liệu. Bắt đầu trận mới!");
+                    localStorage.removeItem('esports_active_match_' + currentUser);
+                    startGame();
+                }
+            }, 100);
+        }
+
+        // Tự động lưu trận mỗi 2 giây
+        let lastMatchSaveTime = 0;
+        function autoSaveActiveMatch() {
+            if(!gameActive || player.hp <= 0) return;
+            try {
+                let envToSave = environment.map(obj => {
+                    let o = {...obj};
+                    if(o.inHouse) { o.inHouseId = environment.indexOf(o.inHouse); delete o.inHouse; }
+                    if(o.items) { o.itemsToSave = o.items.map(i => ({...i})); }
+                    return o;
+                });
+                let enemiesToSave = enemies.map(e => {
+                    let ec = {...e}; delete ec.targetWeapon; delete ec.currentTarget; return ec;
+                });
+                let matchData = {
+                    player: player, enemies: enemiesToSave, environment: envToSave, score: score,
+                    zones: { oldZone, currentZone, safeZone, zoneState, currentPhase, zonePhaseTimer },
+                    bullets: bullets.map(b => ({x:b.x, y:b.y, vx:b.vx, vy:b.vy, life:b.life, z:b.z, ownerIsPlayer: b.owner === player}))
+                };
+                localStorage.setItem('esports_active_match_' + currentUser, JSON.stringify(matchData));
+            } catch(e) { console.warn("Auto-save skip (size limit)."); }
         }
 
         function triggerTop1(rank, kills) {
+            localStorage.removeItem('esports_active_match_' + currentUser); // Xóa save để ko bị reconnect lại trận thắng
             const animBox = document.getElementById('top1-animation');
             const text = animBox.querySelector('.chicken-dinner');
-            animBox.style.display = 'flex';
-            text.classList.add('show');
+            animBox.style.display = 'flex'; text.classList.add('show');
             setTimeout(() => {
-                animBox.style.display = 'none';
-                text.classList.remove('show');
+                animBox.style.display = 'none'; text.classList.remove('show');
                 showStats(rank, kills);
             }, 4000);
         }
 
         function showStats(rank, kills) {
             document.getElementById('game-container').classList.remove('active');
-            
             document.getElementById('loot-menu').style.display = 'none';
             document.getElementById('reload-btn').style.display = 'none';
             document.getElementById('heal-btn').style.display = 'none';
-
             document.getElementById('match-stats').classList.add('active');
 
             let rankPts = calculateRankPoints(rank, kills);
@@ -588,6 +753,7 @@
 
             let newRankInfo = getRankData(myData.rankPoints);
             document.getElementById('match-stats').classList.remove('active');
+            checkActiveMatch(); // Cập nhật lại nút Reconnect
             
             if (newRankInfo.tierLvl > oldRankInfo.tierLvl || (newRankInfo.min > oldRankInfo.min && tempMatchResult.rankPoints > 0)) {
                 triggerRankUpScreen(newRankInfo, oldPoints);
@@ -620,7 +786,7 @@
         }
 
         // =========================================================================
-        // PHẦN 3: ENGINE TRÒ CHƠI BATTLE ROYALE 2.5D
+        // PHẦN 3: ENGINE BATTLE ROYALE 2.5D (ĐÃ FIX LỖI NHẢY LÊN MÁI NHÀ)
         // =========================================================================
 
         const svgWeapon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="#FFF" style="vertical-align: text-bottom; margin-right: 5px;"><path d="M21 9a1 1 0 0 0-1-1h-6.5L12 6H5a1 1 0 0 0-1 1v4h4v7a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-5h4l3 2h2V9z"/></svg>`;
@@ -640,7 +806,7 @@
         let bloodDecals = []; 
 
         const player = { 
-            x: mapSize/2, y: mapSize/2, z: 250, radius: 16, speed: 4.5, angle: 0, 
+            x: 0, y: 0, z: 250, radius: 16, speed: 4.5, angle: 0, 
             landed: false, hp: 100, inBush: false, weaponCount: 0, currentAmmo: 0, reserveAmmo: 0, 
             backpack: 0, reloading: false, reloadEndTime: 0, reloadTotalTime: 0,
             medkits: 0, healing: false, healEndTime: 0, healTotalTime: 3000, 
@@ -792,20 +958,20 @@
             if(bloodDecals.length > 500) bloodDecals.splice(0, bloodDecals.length - 500);
         }
 
-        function getHouseAt(px, py) {
-            for (let obj of environment) { if (obj.type === 'house' && px > obj.x && px < obj.x + obj.w && py > obj.y && py < obj.y + obj.h) return obj; }
+        function getHouseAt(px, py, padding = 0) {
+            for (let obj of environment) { if (obj.type === 'house' && px > obj.x - padding && px < obj.x + obj.w + padding && py > obj.y - padding && py < obj.y + obj.h + padding) return obj; }
             return null;
         }
 
         function initEnvironment() {
-            score = 0; player.hp = 100; player.x = mapSize/2; player.y = mapSize/2; player.z = 250; player.landed = false;
+            score = 0; player.hp = 100; player.z = 250; player.landed = false;
             player.weaponCount = 0; player.currentAmmo = 0; player.reserveAmmo = 0; player.backpack = 0; player.medkits = 0;
-            
             document.getElementById('scoreText').innerText = 0;
             document.getElementById('hpText').innerText = 100;
             
-            environment = []; collidables = []; enemies = []; bloodDecals = [];
+            environment = []; collidables = []; enemies = []; bloodDecals = []; bullets = [];
             let houses = [];
+            let objIdCounter = 0;
             
             const roofThemes = [ { light: '#A52A2A', dark: '#7B241C' }, { light: '#2E86C1', dark: '#21618C' }, { light: '#27AE60', dark: '#196F3D' }, { light: '#707B7C', dark: '#515A5A' }, { light: '#D35400', dark: '#873600' } ];
 
@@ -817,9 +983,28 @@
                     for (let existing of houses) { if (x < existing.x + existing.w + 120 && x + w > existing.x - 120 && y < existing.y + existing.h + 120 && y + h > existing.y - 120) { overlap = true; break; } }
                 }
                 if (!overlap) {
-                    let obj = { type: 'house', x: x, y: y, size: 30 * scale, w: w, h: h, wt: 15, doorW: 80, doorDir: Math.floor(Math.random() * 4), doorOpenAnim: 0, isOpen: false, roofAlpha: 1, roofL: roofThemes[Math.floor(Math.random() * roofThemes.length)].light, roofD: roofThemes[Math.floor(Math.random() * roofThemes.length)].dark };
+                    let obj = { id: objIdCounter++, type: 'house', x: x, y: y, size: 30 * scale, w: w, h: h, wt: 15, doorW: 80, doorDir: Math.floor(Math.random() * 4), doorOpenAnim: 0, isOpen: false, roofAlpha: 1, roofL: roofThemes[Math.floor(Math.random() * roofThemes.length)].light, roofD: roofThemes[Math.floor(Math.random() * roofThemes.length)].dark };
                     houses.push(obj); environment.push(obj);
                 }
+            }
+
+            // Tọa độ an toàn KHÔNG nằm trên nóc nhà cho người chơi
+            let safeSpawn = false;
+            while(!safeSpawn) {
+                player.x = Math.random() * (mapSize - 400) + 200;
+                player.y = Math.random() * (mapSize - 400) + 200;
+                if(!getHouseAt(player.x, player.y, 40)) safeSpawn = true;
+            }
+
+            // Tọa độ an toàn cho 49 Bots
+            for (let i = 0; i < 49; i++) {
+                let ex, ey; let esafe = false;
+                while(!esafe) {
+                    ex = Math.random() * (mapSize - 400) + 200;
+                    ey = Math.random() * (mapSize - 400) + 200;
+                    if(!getHouseAt(ex, ey, 40)) esafe = true;
+                }
+                enemies.push({ id: i, x: ex, y: ey, z: 250 + Math.random() * 200, radius: 16, speed: Math.random() * 1.5 + 2.5, hp: 100, angle: 0, landed: false, inBush: false, hasWeapon: false, reloading: false, reloadEndTime: 0, reloadTotalTime: 0, currentAmmo: 0, lastShot: 0, targetWeapon: null, pickupTimer: 0, medkits: 1, healing: false, healEndTime: 0, healTotalTime: 3000, recoil: 0 });
             }
 
             let placedCrates = 0, attemptsCrate = 0;
@@ -828,11 +1013,11 @@
                 for (let obj of houses) { if (x + size + 40 > obj.x && x - size - 40 < obj.x + obj.w && y + size + 40 > obj.y && y - size - 40 < obj.y + obj.h) { overlap = true; break; } }
                 if (!overlap) {
                     let count = Math.random() > 0.6 ? 2 : 1; 
-                    environment.push({ type: 'crate', x: x, y: y, size: size }); placedCrates++;
+                    environment.push({ id: objIdCounter++, type: 'crate', x: x, y: y, size: size }); placedCrates++;
                     if (count === 2 && placedCrates < 50) {
                         let x2 = x + (Math.random() > 0.5 ? 1 : -1) * (size * 2 + 5), y2 = y + (Math.random() > 0.5 ? 1 : -1) * (size * 2 + 5); let overlap2 = false;
                         for (let obj of houses) { if (x2 + size + 40 > obj.x && x2 - size - 40 < obj.x + obj.w && y2 + size + 40 > obj.y && y2 - size - 40 < obj.y + obj.h) { overlap2 = true; break; } }
-                        if (!overlap2) { environment.push({ type: 'crate', x: x2, y: y2, size: size }); placedCrates++; }
+                        if (!overlap2) { environment.push({ id: objIdCounter++, type: 'crate', x: x2, y: y2, size: size }); placedCrates++; }
                     }
                 }
             }
@@ -842,29 +1027,25 @@
             while(placedOthers < 450 && attempts < 1500) {
                 attempts++; let size = Math.random() * 20 + 20, x = Math.random() * (mapSize - 100) + 50, y = Math.random() * (mapSize - 100) + 50; let overlap = false;
                 for (let obj of houses) { if (x + size + 50 > obj.x && x - size - 50 < obj.x + obj.w && y + size + 50 > obj.y && y - size - 50 < obj.y + obj.h) { overlap = true; break; } }
-                if (!overlap) { environment.push({ type: types[Math.floor(Math.random() * types.length)], x: x, y: y, size: size }); placedOthers++; }
+                if (!overlap) { environment.push({ id: objIdCounter++, type: types[Math.floor(Math.random() * types.length)], x: x, y: y, size: size }); placedOthers++; }
             }
 
             for(let i = 0; i < 150; i++) {
                 let x = Math.random() * (mapSize - 200) + 100; let y = Math.random() * (mapSize - 200) + 100;
-                environment.push({ type: 'weapon', x: x, y: y, inHouse: getHouseAt(x, y) });
+                environment.push({ id: objIdCounter++, type: 'weapon', x: x, y: y, inHouse: getHouseAt(x, y) });
                 let numMags = Math.floor(Math.random() * 3) + 1;
-                for(let j = 0; j < numMags; j++) { let ax = x + (Math.random()*60 - 30); let ay = y + (Math.random()*60 - 30); environment.push({ type: 'ammo', x: ax, y: ay, amount: 31, inHouse: getHouseAt(ax, ay) }); }
-                if(Math.random() > 0.7) { let mx = x + (Math.random()*60 - 30); let my = y + (Math.random()*60 - 30); environment.push({ type: 'medkit', x: mx, y: my, inHouse: getHouseAt(mx, my) }); }
+                for(let j = 0; j < numMags; j++) { let ax = x + (Math.random()*60 - 30); let ay = y + (Math.random()*60 - 30); environment.push({ id: objIdCounter++, type: 'ammo', x: ax, y: ay, amount: 31, inHouse: getHouseAt(ax, ay) }); }
+                if(Math.random() > 0.7) { let mx = x + (Math.random()*60 - 30); let my = y + (Math.random()*60 - 30); environment.push({ id: objIdCounter++, type: 'medkit', x: mx, y: my, inHouse: getHouseAt(mx, my) }); }
             }
 
             for (let house of houses) {
                 if (Math.random() > 0.2) {
                     let itemX = house.x + 40 + Math.random() * (house.w - 80); let itemY = house.y + 40 + Math.random() * (house.h - 80);
-                    environment.push({ type: 'weapon', x: itemX, y: itemY, inHouse: house });
+                    environment.push({ id: objIdCounter++, type: 'weapon', x: itemX, y: itemY, inHouse: house });
                     let numMags = Math.floor(Math.random() * 3) + 1;
-                    for(let j = 0; j < numMags; j++) { let ax = itemX + (Math.random()*50 - 25); let ay = itemY + (Math.random()*50 - 25); environment.push({ type: 'ammo', x: ax, y: ay, amount: 31, inHouse: getHouseAt(ax, ay) }); }
-                    if(Math.random() > 0.5) { let mx = itemX + (Math.random()*50 - 25); let my = itemY + (Math.random()*50 - 25); environment.push({ type: 'medkit', x: mx, y: my, inHouse: getHouseAt(mx, my) }); }
+                    for(let j = 0; j < numMags; j++) { let ax = itemX + (Math.random()*50 - 25); let ay = itemY + (Math.random()*50 - 25); environment.push({ id: objIdCounter++, type: 'ammo', x: ax, y: ay, amount: 31, inHouse: getHouseAt(ax, ay) }); }
+                    if(Math.random() > 0.5) { let mx = itemX + (Math.random()*50 - 25); let my = itemY + (Math.random()*50 - 25); environment.push({ id: objIdCounter++, type: 'medkit', x: mx, y: my, inHouse: getHouseAt(mx, my) }); }
                 }
-            }
-
-            for (let i = 0; i < 49; i++) {
-                enemies.push({ id: i, x: Math.random() * (mapSize - 400) + 200, y: Math.random() * (mapSize - 400) + 200, z: 250 + Math.random() * 200, radius: 16, speed: Math.random() * 1.5 + 2.5, hp: 100, angle: 0, landed: false, inBush: false, hasWeapon: false, reloading: false, reloadEndTime: 0, reloadTotalTime: 0, currentAmmo: 0, lastShot: 0, targetWeapon: null, pickupTimer: 0, medkits: 1, healing: false, healEndTime: 0, healTotalTime: 3000, recoil: 0 });
             }
 
             collidables = environment.filter(obj => obj.type === 'house' || obj.type === 'crate' || obj.type === 'tree' || obj.type === 'rock');
@@ -928,6 +1109,11 @@
         let lastShot = 0;
 
         function update() {
+            if (Date.now() - lastMatchSaveTime > 2000) {
+                autoSaveActiveMatch();
+                lastMatchSaveTime = Date.now();
+            }
+
             let aliveCount = enemies.length + (player.hp > 0 ? 1 : 0);
             document.getElementById('aliveText').innerText = aliveCount;
             document.getElementById('bpText').innerText = player.backpack.toFixed(1);
@@ -1227,7 +1413,7 @@
                             if (e.hasWeapon) dropped.push({type: 'weapon'});
                             if (e.currentAmmo > 0) dropped.push({type: 'ammo', amount: 31}); 
                             if (e.medkits > 0) dropped.push({type: 'medkit'}); 
-                            if (dropped.length > 0) environment.push({type: 'death_crate', x: e.x, y: e.y, size: 15, items: dropped, inHouse: getHouseAt(e.x, e.y)});
+                            if (dropped.length > 0) environment.push({id: objIdCounter++, type: 'death_crate', x: e.x, y: e.y, size: 15, items: dropped, inHouse: getHouseAt(e.x, e.y)});
                             enemies.splice(i, 1); createBlood(e.x, e.y); continue; 
                         }
                     }
@@ -1259,7 +1445,7 @@
                                     if (e.hasWeapon) dropped.push({type: 'weapon'});
                                     if (e.currentAmmo > 0) dropped.push({type: 'ammo', amount: 31});
                                     if (e.medkits > 0) dropped.push({type: 'medkit'});
-                                    if (dropped.length > 0) environment.push({type: 'death_crate', x: e.x, y: e.y, size: 15, items: dropped, inHouse: getHouseAt(e.x, e.y)});
+                                    if (dropped.length > 0) environment.push({id: objIdCounter++, type: 'death_crate', x: e.x, y: e.y, size: 15, items: dropped, inHouse: getHouseAt(e.x, e.y)});
                                     enemies.splice(j, 1); 
                                     if (b.owner === player) { score++; document.getElementById('scoreText').innerText = score; }
                                 }
@@ -1530,16 +1716,17 @@
                 ctx.fillStyle = 'white'; ctx.font = '30px Arial'; ctx.fillText('Kills: ' + score, canvas.width/2, canvas.height/2 + 30);
                 
                 gameActive = false;
+                localStorage.removeItem('esports_active_match_' + currentUser);
                 setTimeout(() => showStats(enemies.length + 1, score), 3000);
             } else if (enemies.length === 0 && gameActive) {
                 gameActive = false;
+                localStorage.removeItem('esports_active_match_' + currentUser);
                 triggerTop1(1, score);
             }
 
             if (gameActive) requestAnimationFrame(gameLoop);
         }
 
-        loadData();
     </script>
 </body>
 </html>
