@@ -10,7 +10,7 @@ document.addEventListener('keydown', function(event) {
         event.preventDefault();
     }
 });
-// Chống trượt vuốt pull-to-refresh trên mobile
+// Chống trượt vuốt (pull-to-refresh) trên mobile
 document.addEventListener('touchmove', function(event) {
     if(event.scale !== 1) { event.preventDefault(); }
 }, { passive: false });
@@ -19,34 +19,37 @@ document.addEventListener('touchmove', function(event) {
    2. LOGIC CHUYỂN TAB SẢNH GAME
    ======================================================== */
 function switchTab(tabId) {
-    // Cập nhật nút
+    // Xóa active ở tất cả các nút
     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+    // Thêm active vào nút được click
     event.target.classList.add('active');
     
-    // Cập nhật nội dung
+    // Cập nhật nội dung hiển thị
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
     document.getElementById('tab-' + tabId).classList.add('active');
 }
 
 /* ========================================================
-   3. CƠ CHẾ TÍNH ĐIỂM THEO YÊU CẦU
+   3. CƠ CHẾ TÍNH ĐIỂM (Cập nhật 1 Kill = +1 Điểm Rank)
    ======================================================== */
-// Tính điểm Rank
-function calculateRankPoints(rank) {
-    if (rank === 1) return 20;
-    if (rank === 2) return 15;
-    if (rank === 3) return 10;
-    if (rank === 4) return 8;
-    if (rank === 5) return 5;
-    if (rank >= 6 && rank <= 15) return 1;
-    if (rank >= 16 && rank <= 21) return 0; // "từ top 15 đến 21 không cộng"
-    if (rank >= 22 && rank <= 30) return -5;
-    if (rank >= 31 && rank <= 40) return -10;
-    if (rank >= 41 && rank <= 50) return -25;
-    return 0; // An toàn cho các top khác
+function calculateRankPoints(rank, kills) {
+    let basePoints = 0; // Điểm hạng cơ bản
+
+    if (rank === 1) basePoints = 20;
+    else if (rank === 2) basePoints = 15;
+    else if (rank === 3) basePoints = 10;
+    else if (rank === 4) basePoints = 8;
+    else if (rank === 5) basePoints = 5;
+    else if (rank >= 6 && rank <= 15) basePoints = 1;
+    else if (rank >= 16 && rank <= 21) basePoints = 0; // "từ top 15 đến 21 không cộng"
+    else if (rank >= 22 && rank <= 30) basePoints = -5;
+    else if (rank >= 31 && rank <= 40) basePoints = -10;
+    else if (rank >= 41 && rank <= 50) basePoints = -25;
+
+    // Tổng điểm Rank = Điểm hạng cơ bản + Số kill
+    return basePoints + kills;
 }
 
-// Tính điểm Súng
 function calculateGunPoints(rank, kills) {
     let baseGunPoints = kills * 2; // 1 mạng = 2 điểm súng
     let bonus = 0;
@@ -57,7 +60,7 @@ function calculateGunPoints(rank, kills) {
 }
 
 /* ========================================================
-   4. RENDER BẢNG XẾP HẠNG (MOCK DATA)
+   4. RENDER BẢNG XẾP HẠNG (DỮ LIỆU MẪU)
    ======================================================== */
 const mockPlayers = [
     { name: "Lẻ Anh Bảy", rankPoints: 4500, kills: 542, matches: 120, gunPoints: 1150 },
@@ -111,17 +114,16 @@ function triggerZoneShrink() {
     const zone = document.getElementById('blue-zone');
     zone.style.display = 'block';
     
-    // Đợi 1 chút để DOM cập nhật rồi mới add class transition
+    // Đợi 1 chút để DOM cập nhật rồi mới bắt đầu thu hẹp
     setTimeout(() => {
         zone.classList.add('shrinking');
     }, 100);
 }
 
 /* ========================================================
-   7. HOẠT ẢNH TOP 1 & BẢNG THỐNG KÊ KẾT THÚC
+   7. HOẠT ẢNH TOP 1 & HIỂN THỊ BẢNG THỐNG KÊ
    ======================================================== */
 function triggerTop1(rank, kills) {
-    // Nếu đạt Top 1
     if (rank === 1) {
         const animBox = document.getElementById('top1-animation');
         const text = animBox.querySelector('.chicken-dinner');
@@ -129,14 +131,14 @@ function triggerTop1(rank, kills) {
         animBox.style.display = 'flex';
         text.classList.add('show');
 
-        // Đợi 5 giây sau đó hiện bảng thống kê
+        // Đợi 5 giây sau đó ẩn hoạt ảnh và hiện bảng thống kê
         setTimeout(() => {
             animBox.style.display = 'none';
             text.classList.remove('show');
             showStats(rank, kills);
         }, 5000);
     } else {
-        // Nếu không phải top 1, hiện thẳng bảng thống kê
+        // Nếu không phải top 1, chuyển sang thẳng bảng thống kê
         showStats(rank, kills);
     }
 }
@@ -145,7 +147,7 @@ function showStats(rank, kills) {
     document.getElementById('game-container').classList.remove('active');
     document.getElementById('match-stats').classList.add('active');
 
-    let rankPts = calculateRankPoints(rank);
+    let rankPts = calculateRankPoints(rank, kills);
     let gunPts = calculateGunPoints(rank, kills);
 
     document.getElementById('stat-top').innerText = rank;
