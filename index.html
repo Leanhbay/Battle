@@ -25,12 +25,12 @@
         .nav-btn:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
         .nav-btn.active { color: #000; background: linear-gradient(45deg, #fbbf24, #f59e0b); border-color: #fbbf24; box-shadow: 0 0 15px rgba(251, 191, 36, 0.4); }
         
-        /* Nội dung Tab - Đã giảm padding để tránh cuộn trang */
+        /* Nội dung Tab */
         .tab-content { display: none; flex: 1; padding: 15px; max-width: 800px; margin: 0 auto; width: 100%; overflow-y: auto; overflow-x: hidden; }
         .tab-content.active { display: block; animation: fadeInZoom 0.4s ease-out; }
         .tab-title { text-align: center; margin-bottom: 20px; color: #f8fafc; font-size: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
         
-        /* Hồ Sơ - Làm gọn hình ảnh và chữ */
+        /* Hồ Sơ */
         .profile-header { text-align: center; margin-bottom: 10px; }
         .main-avatar { width: 70px; height: 70px; border-radius: 50%; border: 3px solid #38bdf8; box-shadow: 0 0 20px rgba(56, 189, 248, 0.5); margin-bottom: 5px; }
         .profile-header h2 { font-size: 18px; margin: 5px 0; }
@@ -43,7 +43,7 @@
         .stat-box:hover { transform: translateY(-3px); border-color: rgba(56, 189, 248, 0.3); }
         .glow-text { color: #38bdf8; font-size: 22px; text-shadow: 0 0 10px rgba(56, 189, 248, 0.6); display: block; margin-top: 5px; font-weight: bold; }
         
-        /* Nút bấm hiệu ứng - Kéo lên cao hơn */
+        /* Nút bấm hiệu ứng */
         .start-btn { width: 100%; margin-top: 15px; padding: 15px; background: linear-gradient(45deg, #ea580c, #dc2626); color: white; border: none; font-size: 18px; font-weight: 900; border-radius: 12px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4); transition: all 0.2s; }
         .start-btn:active { transform: scale(0.95); }
         .pulse-anim { animation: pulse 2s infinite; }
@@ -313,15 +313,16 @@
         }
 
         function loadData() {
-            let savedData = localStorage.getItem('esports_game_data');
-            let lastOnline = localStorage.getItem('esports_lastOnline');
+            // Đã đổi Key thành v2 để tự động RESET toàn bộ dữ liệu của người dùng về 0
+            let savedData = localStorage.getItem('esports_game_data_v2');
+            let lastOnline = localStorage.getItem('esports_lastOnline_v2');
             let now = Date.now();
 
             if (savedData) {
                 playersData = JSON.parse(savedData);
                 if (lastOnline) {
                     let offlineTimeMs = now - parseInt(lastOnline);
-                    let offlineCycles = Math.floor(offlineTimeMs / 8000);
+                    let offlineCycles = Math.floor(offlineTimeMs / 5000); // 5 giây 1 chu kỳ
                     if (offlineCycles > 0) {
                         if (offlineCycles > 10000) offlineCycles = 10000;
                         for (let i = 0; i < offlineCycles; i++) {
@@ -358,8 +359,8 @@
         }
 
         function saveData() {
-            localStorage.setItem('esports_game_data', JSON.stringify(playersData));
-            localStorage.setItem('esports_lastOnline', Date.now().toString());
+            localStorage.setItem('esports_game_data_v2', JSON.stringify(playersData));
+            localStorage.setItem('esports_lastOnline_v2', Date.now().toString());
         }
 
         function getRankData(points) {
@@ -469,15 +470,23 @@
             renderList('list-gun', 'gunPoints', 'Điểm Súng');
         }
 
+        // --- HỆ THỐNG MÔ PHỎNG BOT MỚI (LEO HẠNG NHANH & CẠNH TRANH) ---
         function simulateBots(isOnline = true) {
-            let numPlayersFinished = Math.floor(Math.random() * 6) + 3; 
+            // Tăng số lượng người chơi hoàn thành trận mỗi 5 giây (10 đến 20 bot)
+            let numPlayersFinished = Math.floor(Math.random() * 11) + 10; 
 
             for(let i = 0; i < numPlayersFinished; i++) {
                 let botIndex = Math.floor(Math.random() * (playersData.length - 1)) + 1;
                 let bot = playersData[botIndex];
                 if(!bot) continue;
                 
-                let simulatedRank = Math.floor(Math.random() * 50) + 1;
+                let simulatedRank;
+                // Bot thông minh hơn: 70% cơ hội lọt Top 1->20 (để điểm luôn tăng và leo hạng cực gắt)
+                if (Math.random() < 0.7) {
+                    simulatedRank = Math.floor(Math.random() * 20) + 1; 
+                } else {
+                    simulatedRank = Math.floor(Math.random() * 30) + 21; 
+                }
                 
                 let simulatedKills = 0;
                 if (simulatedRank === 1) simulatedKills = Math.floor(Math.random() * 8) + 5; 
@@ -507,7 +516,8 @@
             }
         }
 
-        setInterval(() => simulateBots(true), 8000);
+        // Thời gian tải trận rút ngắn còn 5 giây để bảng xếp hạng nhảy số liên tục!
+        setInterval(() => simulateBots(true), 5000);
 
         function startGame() {
             document.getElementById('lobby-container').classList.remove('active');
