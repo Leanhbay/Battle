@@ -34,13 +34,28 @@ body {
     border-color: #fbbf24; box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
 }
 
-/* Nội dung Tab */
+/* Nội dung Tab + Tối ưu thanh cuộn cho BXH 50 bậc */
 .tab-content {
     display: none; flex: 1; padding: 30px 15px; max-width: 800px; margin: 0 auto; width: 100%;
     overflow-y: auto; overflow-x: hidden;
 }
 .tab-content.active { display: block; animation: fadeInZoom 0.4s ease-out; }
 .tab-title { text-align: center; margin-bottom: 20px; color: #f8fafc; font-size: 24px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+
+/* Tùy chỉnh thanh cuộn đẹp mắt cho BXH */
+.tab-content::-webkit-scrollbar {
+    width: 6px;
+}
+.tab-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.01);
+}
+.tab-content::-webkit-scrollbar-thumb {
+    background: rgba(56, 189, 248, 0.3);
+    border-radius: 10px;
+}
+.tab-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(56, 189, 248, 0.6);
+}
 
 /* Hồ Sơ */
 .profile-header { text-align: center; margin-bottom: 20px; }
@@ -75,9 +90,8 @@ body {
     background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255,255,255,0.05);
     margin-bottom: 12px; border-radius: 12px; padding: 12px 20px;
     backdrop-filter: blur(10px); transition: all 0.3s ease;
-    /* Hoạt ảnh trượt từ phải sang */
     opacity: 0; transform: translateX(30px);
-    animation: slideInRight 0.5s forwards ease-out;
+    animation: slideInRight 0.3s forwards ease-out;
 }
 .leaderboard li:hover {
     transform: scale(1.02) translateX(0) !important;
@@ -123,14 +137,7 @@ body {
 .test-btn.lose { background: #be123c; }
 .test-btn:hover { filter: brightness(1.2); }
 
-/* Thông báo */
-#toast-notification {
-    position: fixed; top: -50px; left: 50%; transform: translateX(-50%);
-    background: #4ade80; color: #022c22; padding: 10px 20px; border-radius: 30px;
-    font-weight: bold; z-index: 9999; box-shadow: 0 5px 15px rgba(74, 222, 128, 0.4);
-    transition: top 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-#toast-notification.show { top: 20px; }
+/* Đã xóa các style liên quan đến #toast-notification */
 
 /* Hoạt ảnh */
 @keyframes slideInRight { to { opacity: 1; transform: translateX(0); } }
