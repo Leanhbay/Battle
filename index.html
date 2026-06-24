@@ -3,237 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Mõmball Championship</title>
-    <style>
-        body { 
-            margin: 0; padding: 0; 
-            background-color: #1a252f; color: white; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            height: 100vh; overflow: hidden; font-family: Arial, sans-serif; 
-        }
-        canvas { 
-            background-color: #27ae60; 
-            border-radius: 8px; 
-            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3); /* Viền vàng hoàng kim */
-        }
-        #btn-start { 
-            padding: 15px 30px; font-size: 18px; font-weight: bold;
-            background-color: #e67e22; color: white; border: none; border-radius: 25px; 
-            margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: pointer; 
-            text-transform: uppercase;
-        }
-        #btn-start:active { transform: scale(0.95); }
-        .instructions { text-align: center; margin-bottom: 15px; font-size: 15px; padding: 0 20px; color: #ecf0f1;}
-        .highlight { color: #f1c40f; font-weight: bold; font-size: 18px;}
-    </style>
+    <title>BATTLE ROYALE 2.5D - Mobile & Realistic</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="ui-container">
-        <h1 style="text-align: center; color: #f1c40f;">🏆 MÕMBALL 🏆<br><span style="font-size: 20px; color: white;">Championship</span></h1>
-        <p class="instructions">Mũi tên sẽ tự động quét góc sút.<br><br>Canh góc chuẩn và <span class="highlight">GÁY THẬT TO</span> vào mic để sút tung lưới!</p>
-        <button id="btn-start">🎤 Vào sân gáy ngay</button>
+
+    <div id="ui-layer">
+        <h1>BATTLE ROYALE 2.5D</h1>
+        <p>Trạng thái: <span id="statusText" style="color: #00FF00;">Đang nhảy dù...</span></p>
+        <p>Điểm: <span id="scoreText">0</span> | HP: <span id="hpText">100</span></p>
     </div>
 
-    <canvas id="gameCanvas" width="320" height="480" style="display:none;"></canvas>
+    <div id="controls">
+        <strong>PC:</strong> W,A,S,D di chuyển | Chuột ngắm & Bắn | Phím F đóng/mở cửa.<br>
+        <strong>Mobile:</strong> Dùng Joystick, Nút Bắn & Nút Mở Cửa.
+    </div>
+    
+    <div class="blood-overlay" id="blood"></div>
 
-    <script>
-        const startBtn = document.getElementById('btn-start');
-        const uiContainer = document.getElementById('ui-container');
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+    <div id="joystick-zone">
+        <div id="joystick-knob"></div>
+    </div>
+    <div id="shoot-btn">BẮN</div>
+    <div id="interact-btn">MỞ</div>
 
-        let audioContext;
-        let analyser;
-        let dataArray;
-        let volume = 0;
+    <canvas id="gameCanvas"></canvas>
 
-        let gameState = 'AIMING'; 
-        let score = 0;
-        let message = "";
-        let messageColor = "white";
-
-        const goal = { x: 70, y: 40, w: 180, h: 50 };
-        const goalie = { x: 140, y: 60, w: 40, h: 25, speed: 3.5, dir: 1 }; // Thủ môn bắt nhanh hơn bản cũ
-        let ball = { x: 160, y: 400, radius: 12, vx: 0, vy: 0 };
-        
-        let aimAngle = 0;     
-        let aimDir = 1;       
-
-        startBtn.addEventListener('click', async () => {
-            try {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                audioContext = new AudioContext();
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                const microphone = audioContext.createMediaStreamSource(stream);
-                
-                analyser = audioContext.createAnalyser();
-                analyser.fftSize = 256;
-                microphone.connect(analyser);
-                dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-                uiContainer.style.display = 'none';
-                canvas.style.display = 'block';
-                
-                if (audioContext.state === 'suspended') await audioContext.resume();
-                
-                requestAnimationFrame(gameLoop);
-            } catch (err) {
-                alert('Mõmball mà không cho dùng Mic thì sút bằng niềm tin hả bạn ơi? Bật mic lên nhé!');
-            }
-        });
-
-        function getVolume() {
-            analyser.getByteFrequencyData(dataArray);
-            let sum = 0;
-            for(let i = 0; i < dataArray.length; i++) sum += dataArray[i];
-            return sum / dataArray.length;
-        }
-
-        function resetShot() {
-            ball.x = 160;
-            ball.y = 400;
-            ball.vx = 0;
-            ball.vy = 0;
-            gameState = 'AIMING';
-            message = "";
-        }
-
-        function drawField() {
-            for (let i = 0; i < 10; i++) {
-                ctx.fillStyle = i % 2 === 0 ? '#27ae60' : '#2ecc71';
-                ctx.fillRect(0, i * 48, canvas.width, 48);
-            }
-            ctx.strokeStyle = 'white';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(goal.x - 20, goal.y, goal.w + 40, 80);
-            ctx.beginPath();
-            ctx.arc(160, 120, 40, 0, Math.PI);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.arc(160, 400, 4, 0, Math.PI * 2);
-            ctx.fillStyle = 'white';
-            ctx.fill();
-        }
-
-        function gameLoop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawField();
-            volume = getVolume();
-
-            // Cập nhật Thủ môn
-            goalie.x += goalie.speed * goalie.dir;
-            if (goalie.x < goal.x || goalie.x + goalie.w > goal.x + goal.w) goalie.dir *= -1;
-
-            // Lưới & Gôn
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; 
-            ctx.fillRect(goal.x, goal.y, goal.w, goal.h);
-            ctx.strokeStyle = 'white';
-            ctx.lineWidth = 5;
-            ctx.strokeRect(goal.x, goal.y, goal.w, goal.h); 
-
-            // Thủ môn áo tím mắm tôm
-            ctx.fillStyle = '#8e44ad'; 
-            ctx.fillRect(goalie.x, goalie.y, goalie.w, goalie.h);
-            ctx.fillStyle = '#f1c40f'; // Găng tay vàng
-            ctx.fillRect(goalie.x - 10, goalie.y + 5, 10, 10);
-            ctx.fillRect(goalie.x + goalie.w, goalie.y + 5, 10, 10);
-
-            // MŨI TÊN NGẮM SÚT
-            if (gameState === 'AIMING') {
-                aimAngle += 0.05 * aimDir;
-                if (aimAngle > 1.2) aimDir = -1;
-                if (aimAngle < -1.2) aimDir = 1;
-
-                ctx.beginPath();
-                ctx.moveTo(ball.x, ball.y);
-                let endX = ball.x + Math.sin(aimAngle) * 60;
-                let endY = ball.y - Math.cos(aimAngle) * 60;
-                ctx.lineTo(endX, endY);
-                ctx.strokeStyle = '#f1c40f'; // Mũi tên vàng
-                ctx.lineWidth = 4;
-                ctx.stroke();
-
-                // Nhận diện "Tiếng Gáy" (Volume > 40)
-                if (volume > 40) {
-                    let power = Math.max(6, volume / 7); 
-                    ball.vx = Math.sin(aimAngle) * power;
-                    ball.vy = -Math.cos(aimAngle) * power;
-                    gameState = 'SHOOTING';
-                }
-            } 
-            // QUẢ BÓNG BAY
-            else if (gameState === 'SHOOTING') {
-                ball.x += ball.vx;
-                ball.y += ball.vy;
-
-                // Bóng bay ra ngoài
-                if (ball.x < 0 || ball.x > canvas.width || ball.y < 0) {
-                    message = "HẢO SÚT! Bay ra ngoài luôn 🤣";
-                    messageColor = "#e74c3c";
-                    gameState = 'RESULT';
-                    setTimeout(resetShot, 2000); 
-                } 
-                // Bóng chạm vạch gôn
-                else if (ball.y <= goal.y + goal.h) {
-                    if (ball.x > goal.x && ball.x < goal.x + goal.w) {
-                        // Bị thủ môn tóm
-                        if (ball.x > goalie.x - ball.radius && ball.x < goalie.x + goalie.w + ball.radius) {
-                            message = "BẮT BÀI! Gáy to nữa lên bấy bì 🥱";
-                            messageColor = "#3498db";
-                            gameState = 'RESULT';
-                        } else {
-                            message = "MÕM RÁCH LƯỚI! VÀOOOOO 🔥";
-                            messageColor = "#f1c40f";
-                            score++;
-                            gameState = 'RESULT';
-                        }
-                    } else {
-                        message = "Trúng cột dọc! Đen thôi đỏ quên đi 😅";
-                        messageColor = "#e67e22";
-                        gameState = 'RESULT';
-                    }
-                    setTimeout(resetShot, 2000);
-                }
-            }
-
-            // VẼ BÓNG
-            ctx.beginPath();
-            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-            ctx.fillStyle = 'white';
-            ctx.fill();
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = 'black';
-            ctx.stroke();
-            ctx.fillStyle = 'black';
-            ctx.fillRect(ball.x - 3, ball.y - 3, 6, 6);
-
-            // GIAO DIỆN CHUNG
-            ctx.fillStyle = '#f1c40f';
-            ctx.font = 'bold 20px Arial';
-            ctx.fillText('🏆 Bàn thắng: ' + score, 10, 30);
-            
-            // Thanh đo "Nội Công" Mic
-            ctx.fillStyle = volume > 40 ? '#2ecc71' : '#e74c3c';
-            let barWidth = Math.min(volume * 2, canvas.width - 20); 
-            ctx.fillRect(10, 460, barWidth, 10);
-            ctx.fillStyle = 'white';
-            ctx.font = '12px Arial';
-            ctx.fillText('Nội lực giọng nói (Đầy thanh là bóng bay)', 10, 455);
-
-            // BẢNG THÔNG BÁO "KHỊA"
-            if (message !== "") {
-                ctx.fillStyle = messageColor;
-                ctx.font = 'bold 18px Arial';
-                ctx.textAlign = 'center';
-                ctx.shadowColor = "black";
-                ctx.shadowBlur = 8;
-                ctx.fillText(message, canvas.width / 2, canvas.height / 2);
-                ctx.shadowBlur = 0; 
-                ctx.textAlign = 'left';
-            }
-
-            requestAnimationFrame(gameLoop);
-        }
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
