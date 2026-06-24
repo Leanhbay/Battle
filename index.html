@@ -51,10 +51,31 @@
         .stat-box:hover { transform: translateY(-3px); border-color: rgba(56, 189, 248, 0.3); }
         .glow-text { color: #38bdf8; font-size: 22px; text-shadow: 0 0 10px rgba(56, 189, 248, 0.6); display: block; margin-top: 5px; font-weight: bold; }
         
+        /* CHỌN CHẾ ĐỘ CHƠI */
+        .mode-container { display: flex; gap: 10px; margin-top: 15px; }
+        .mode-btn { flex: 1; padding: 12px; background: rgba(15, 23, 42, 0.8); border: 2px solid #475569; color: white; font-weight: bold; border-radius: 10px; cursor: pointer; transition: 0.3s; }
+        .mode-btn.active { background: rgba(56, 189, 248, 0.2); border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.3); }
+        
+        .squad-panel { background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 15px; margin-top: 10px; display: none; }
+        .squad-panel h3 { font-size: 14px; margin-bottom: 10px; color: #fbbf24; }
+        .squad-list { list-style: none; padding: 0; margin-bottom: 10px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; }
+        .squad-list li { background: rgba(255, 255, 255, 0.1); padding: 8px; border-radius: 5px; font-size: 12px; display: flex; align-items: center; justify-content: space-between; }
+        .invite-btn { width: 100%; padding: 10px; background: #475569; border: none; color: white; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .invite-btn:hover { background: #64748b; }
+
         .start-btn { width: 100%; margin-top: 15px; padding: 15px; background: linear-gradient(45deg, #ea580c, #dc2626); color: white; border: none; font-size: 18px; font-weight: 900; border-radius: 12px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4); transition: all 0.2s; }
         .start-btn:active { transform: scale(0.95); }
         .pulse-anim { animation: pulse 2s infinite; }
         
+        /* MATCHMAKING OVERLAY */
+        #matchmaking-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(2, 6, 23, 0.95); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
+        .mm-box { text-align: center; }
+        .mm-box h2 { color: #38bdf8; font-size: 28px; margin-bottom: 10px; animation: pulse 1s infinite; }
+        .mm-box p { color: #cbd5e1; font-size: 16px; margin-bottom: 30px; }
+        .mm-time { font-size: 40px; font-weight: 900; color: #fbbf24; }
+        .cancel-btn { padding: 10px 30px; background: transparent; border: 2px solid #ef4444; color: #ef4444; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        .cancel-btn:hover { background: rgba(239, 68, 68, 0.1); }
+
         .leaderboard { list-style: none; padding-bottom: 50px; }
         .leaderboard li { display: flex; align-items: center; justify-content: space-between; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px; border-radius: 12px; padding: 10px 15px; backdrop-filter: blur(10px); transition: all 0.3s ease; }
         .leaderboard li:hover { transform: scale(1.02) translateX(0) !important; background: rgba(51, 65, 85, 0.9); box-shadow: 0 10px 20px rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.2); z-index: 2; position: relative; }
@@ -184,7 +205,7 @@
     <!-- MÀN HÌNH SẢNH CHỜ (LOBBY) -->
     <div id="lobby-container">
         <nav class="lobby-nav">
-            <button class="nav-btn active" onclick="switchTab('profile')">Hồ Sơ Của Tôi</button>
+            <button class="nav-btn active" onclick="switchTab('profile')">Hồ Sơ</button>
             <button class="nav-btn" onclick="switchTab('rank')">BXH Rank</button>
             <button class="nav-btn" onclick="switchTab('kills')">BXH Kills</button>
             <button class="nav-btn" onclick="switchTab('gun')">BXH Súng</button>
@@ -220,8 +241,23 @@
                 <div class="stat-box">Điểm Súng<br><strong id="my-gun-points" class="glow-text">0</strong></div>
                 <div class="stat-box">Tổng Top 1<br><strong id="my-top1" class="glow-text">0</strong></div>
             </div>
+
+            <!-- CHỌN CHẾ ĐỘ CHƠI -->
+            <div class="mode-container">
+                <button id="btn-solo" class="mode-btn active" onclick="setMode('solo')">👤 SOLO</button>
+                <button id="btn-squad" class="mode-btn" onclick="setMode('squad')">👥 ĐỘI 4 (SQUAD)</button>
+            </div>
+
+            <!-- PANEL TỔ ĐỘI SQUAD -->
+            <div id="squad-panel" class="squad-panel">
+                <h3>Tổ Đội Của Bạn (Ghép tự động nếu thiếu)</h3>
+                <ul class="squad-list" id="squad-list">
+                    <!-- Danh sách đồng đội sẽ render ở đây -->
+                </ul>
+                <button class="invite-btn" onclick="inviteFriend()">+ MỜI BẠN BÈ</button>
+            </div>
             
-            <button id="start-btn" class="start-btn pulse-anim" onclick="startGame()">VÀO TRẬN NGAY</button>
+            <button id="start-btn" class="start-btn pulse-anim" onclick="startMatchmaking()">VÀO TRẬN NGAY</button>
             <button id="reconnect-btn" class="start-btn pulse-anim" onclick="reconnectMatch()" style="display:none; background: linear-gradient(45deg, #059669, #10b981);">KẾT NỐI LẠI TRẬN (ĐANG DỞ)</button>
         </div>
 
@@ -236,6 +272,15 @@
         <div class="tab-content" id="tab-gun">
             <h2 class="tab-title">🔫 Bảng Xếp Hạng Điểm Súng</h2>
             <ul class="leaderboard" id="list-gun"></ul>
+        </div>
+    </div>
+
+    <!-- MATCHMAKING OVERLAY -->
+    <div id="matchmaking-overlay">
+        <div class="mm-box">
+            <h2>ĐANG TÌM TRẬN...</h2>
+            <p>Vui lòng chờ: <span class="mm-time" id="mm-time">0</span>s</p>
+            <button class="cancel-btn" onclick="cancelMatchmaking()">HỦY TÌM TRẬN</button>
         </div>
     </div>
 
@@ -295,7 +340,7 @@
 
     <script>
         // =========================================================================
-        // PHẦN 1: HỆ THỐNG TÀI KHOẢN & SẢNH CHỜ
+        // PHẦN 1: HỆ THỐNG TÀI KHOẢN, SẢNH CHỜ VÀ TỔ ĐỘI
         // =========================================================================
         
         document.addEventListener('contextmenu', e => e.preventDefault());
@@ -309,6 +354,11 @@
         let tempMatchResult = { rankPoints: 0, kills: 0, gunPoints: 0, rank: 0 };
         let playersData = [];
         let gameActive = false; 
+
+        // Multi-player Mode Variables
+        let gameMode = 'solo'; // 'solo' hoặc 'squad'
+        let mySquad = []; 
+        let mmTimerInterval;
 
         const RANK_TIERS = [
             { name: "Gỗ 1", min: 0, max: 499, css: "tier-wood", short: "G1", tierLvl: 1, color: "#CD853F" },
@@ -342,6 +392,9 @@
             "DragonSlayer", "IronMan", "Captain", "Thor", "Hulk", "BlackWidow", "Hawkeye", "Superman", 
             "Batman", "Flash", "Aquaman", "WonderWoman", "Cyborg", "Joker", "HarleyQuinn", "Thanos"
         ];
+        
+        // Danh sách tên giả lập làm "Bạn bè"
+        const fakeFriendsList = ["MixiGaming", "Sena", "ThầyGiáoBa", "HieuPC", "Zeros", "Optimus", "ViruSs", "PewPew"];
 
         window.onload = function() {
             if(currentUser && usersDB[currentUser]) {
@@ -391,8 +444,63 @@
         function finishLogin() {
             document.getElementById('auth-container').classList.remove('active');
             document.getElementById('lobby-container').classList.add('active');
+            mySquad = [{ name: currentUser, isMe: true }]; // Initialize squad with myself
             loadData();
             checkActiveMatch();
+            renderSquadUI();
+        }
+
+        function setMode(mode) {
+            gameMode = mode;
+            document.getElementById('btn-solo').classList.remove('active');
+            document.getElementById('btn-squad').classList.remove('active');
+            document.getElementById('btn-' + mode).classList.add('active');
+            
+            if (mode === 'squad') {
+                document.getElementById('squad-panel').style.display = 'block';
+            } else {
+                document.getElementById('squad-panel').style.display = 'none';
+            }
+        }
+
+        function renderSquadUI() {
+            let list = document.getElementById('squad-list');
+            list.innerHTML = '';
+            mySquad.forEach((member, index) => {
+                let li = document.createElement('li');
+                li.innerHTML = `<span><span style="color:${member.isMe ? '#38bdf8' : '#4ade80'}">●</span> ${member.name}</span>`;
+                list.appendChild(li);
+            });
+        }
+
+        function inviteFriend() {
+            if (mySquad.length >= 4) {
+                return alert("Tổ đội đã đầy (Tối đa 4 người)!");
+            }
+            let randomFriend = fakeFriendsList[Math.floor(Math.random() * fakeFriendsList.length)] + Math.floor(Math.random()*99);
+            mySquad.push({ name: randomFriend, isMe: false });
+            renderSquadUI();
+        }
+
+        function startMatchmaking() {
+            let waitTime = Math.floor(Math.random() * 25) + 6; // Random 6 - 30 seconds
+            document.getElementById('matchmaking-overlay').style.display = 'flex';
+            document.getElementById('mm-time').innerText = waitTime;
+            
+            mmTimerInterval = setInterval(() => {
+                waitTime--;
+                document.getElementById('mm-time').innerText = waitTime;
+                if(waitTime <= 0) {
+                    clearInterval(mmTimerInterval);
+                    document.getElementById('matchmaking-overlay').style.display = 'none';
+                    startGame();
+                }
+            }, 1000);
+        }
+
+        function cancelMatchmaking() {
+            clearInterval(mmTimerInterval);
+            document.getElementById('matchmaking-overlay').style.display = 'none';
         }
 
         function checkActiveMatch() {
@@ -618,7 +726,6 @@
             document.getElementById('statusText').innerText = "Đang khởi tạo bản đồ...";
             document.getElementById('statusText').style.color = "#FFD700";
 
-            // Fix treo màn hình: Đưa logic map nặng vào setTimeout để UI kịp load
             setTimeout(() => {
                 canvas.width = window.innerWidth;
                 canvas.height = window.innerHeight;
@@ -630,7 +737,7 @@
 
         function reconnectMatch() {
             let dataStr = localStorage.getItem('esports_active_match_' + currentUser);
-            if(!dataStr) return startGame(); 
+            if(!dataStr) return startMatchmaking(); 
 
             document.getElementById('lobby-container').classList.remove('active');
             document.getElementById('game-container').classList.add('active');
@@ -650,8 +757,8 @@
                     zoneState = data.zones.zoneState;
                     currentPhase = data.zones.currentPhase;
                     zonePhaseTimer = data.zones.zonePhaseTimer;
+                    gameMode = data.gameMode || 'solo'; // Khôi phục chế độ chơi
                     
-                    // Khôi phục liên kết vòng lặp (Circular reference)
                     environment.forEach(obj => {
                         if(obj.inHouseId !== undefined && obj.inHouseId !== null) {
                             obj.inHouse = environment[obj.inHouseId];
@@ -674,14 +781,13 @@
                     requestAnimationFrame(gameLoop);
                 } catch(e) {
                     console.error("Lỗi Reconnect:", e);
-                    alert("Trận đấu cũ bị lỗi dữ liệu. Bắt đầu trận mới!");
+                    alert("Trận đấu cũ bị lỗi dữ liệu. Bắt đầu tìm trận mới!");
                     localStorage.removeItem('esports_active_match_' + currentUser);
-                    startGame();
+                    startMatchmaking();
                 }
             }, 100);
         }
 
-        // Tự động lưu trận mỗi 2 giây
         let lastMatchSaveTime = 0;
         function autoSaveActiveMatch() {
             if(!gameActive || player.hp <= 0) return;
@@ -698,14 +804,15 @@
                 let matchData = {
                     player: player, enemies: enemiesToSave, environment: envToSave, score: score,
                     zones: { oldZone, currentZone, safeZone, zoneState, currentPhase, zonePhaseTimer },
-                    bullets: bullets.map(b => ({x:b.x, y:b.y, vx:b.vx, vy:b.vy, life:b.life, z:b.z, ownerIsPlayer: b.owner === player}))
+                    bullets: bullets.map(b => ({x:b.x, y:b.y, vx:b.vx, vy:b.vy, life:b.life, z:b.z, ownerIsPlayer: b.owner === player})),
+                    gameMode: gameMode
                 };
                 localStorage.setItem('esports_active_match_' + currentUser, JSON.stringify(matchData));
             } catch(e) { console.warn("Auto-save skip (size limit)."); }
         }
 
         function triggerTop1(rank, kills) {
-            localStorage.removeItem('esports_active_match_' + currentUser); // Xóa save để ko bị reconnect lại trận thắng
+            localStorage.removeItem('esports_active_match_' + currentUser); 
             const animBox = document.getElementById('top1-animation');
             const text = animBox.querySelector('.chicken-dinner');
             animBox.style.display = 'flex'; text.classList.add('show');
@@ -753,7 +860,7 @@
 
             let newRankInfo = getRankData(myData.rankPoints);
             document.getElementById('match-stats').classList.remove('active');
-            checkActiveMatch(); // Cập nhật lại nút Reconnect
+            checkActiveMatch(); 
             
             if (newRankInfo.tierLvl > oldRankInfo.tierLvl || (newRankInfo.min > oldRankInfo.min && tempMatchResult.rankPoints > 0)) {
                 triggerRankUpScreen(newRankInfo, oldPoints);
@@ -786,7 +893,7 @@
         }
 
         // =========================================================================
-        // PHẦN 3: ENGINE BATTLE ROYALE 2.5D (ĐÃ FIX LỖI NHẢY LÊN MÁI NHÀ)
+        // PHẦN 3: ENGINE BATTLE ROYALE 2.5D (TỔ ĐỘI & AI MỚI)
         // =========================================================================
 
         const svgWeapon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="#FFF" style="vertical-align: text-bottom; margin-right: 5px;"><path d="M21 9a1 1 0 0 0-1-1h-6.5L12 6H5a1 1 0 0 0-1 1v4h4v7a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-5h4l3 2h2V9z"/></svg>`;
@@ -806,7 +913,7 @@
         let bloodDecals = []; 
 
         const player = { 
-            x: 0, y: 0, z: 250, radius: 16, speed: 4.5, angle: 0, 
+            x: 0, y: 0, z: 250, radius: 16, speed: 4.5, angle: 0, teamId: 1, // Người chơi luôn ở team 1
             landed: false, hp: 100, inBush: false, weaponCount: 0, currentAmmo: 0, reserveAmmo: 0, 
             backpack: 0, reloading: false, reloadEndTime: 0, reloadTotalTime: 0,
             medkits: 0, healing: false, healEndTime: 0, healTotalTime: 3000, 
@@ -964,7 +1071,7 @@
         }
 
         function initEnvironment() {
-            score = 0; player.hp = 100; player.z = 250; player.landed = false;
+            score = 0; player.hp = 100; player.z = 250; player.landed = false; player.teamId = 1;
             player.weaponCount = 0; player.currentAmmo = 0; player.reserveAmmo = 0; player.backpack = 0; player.medkits = 0;
             document.getElementById('scoreText').innerText = 0;
             document.getElementById('hpText').innerText = 100;
@@ -988,7 +1095,6 @@
                 }
             }
 
-            // Tọa độ an toàn KHÔNG nằm trên nóc nhà cho người chơi
             let safeSpawn = false;
             while(!safeSpawn) {
                 player.x = Math.random() * (mapSize - 400) + 200;
@@ -996,15 +1102,63 @@
                 if(!getHouseAt(player.x, player.y, 40)) safeSpawn = true;
             }
 
-            // Tọa độ an toàn cho 49 Bots
+            // --- HỆ THỐNG GHÉP ĐỘI (MATCHMAKING LOGIC) ---
+            let currentBotTeamId = 2;
+            let botsInCurrentTeam = 0;
+
             for (let i = 0; i < 49; i++) {
                 let ex, ey; let esafe = false;
-                while(!esafe) {
-                    ex = Math.random() * (mapSize - 400) + 200;
-                    ey = Math.random() * (mapSize - 400) + 200;
-                    if(!getHouseAt(ex, ey, 40)) esafe = true;
+                
+                let isMyTeammate = false;
+                let botName = botNamesList[Math.floor(Math.random() * botNamesList.length)] + Math.floor(Math.random()*99);
+
+                // Cấp phát Team cho Bot dựa vào Mode
+                if (gameMode === 'squad') {
+                    if (mySquad.length > 1 && i < mySquad.length - 1) {
+                        // Thêm bạn bè giả lập vào game
+                        isMyTeammate = true;
+                        botName = mySquad[i + 1].name; 
+                    } else if (mySquad.length < 4 && i < (4 - mySquad.length)) {
+                        // Tự động thêm bot vào team nếu thiếu người
+                        isMyTeammate = true;
+                    }
                 }
-                enemies.push({ id: i, x: ex, y: ey, z: 250 + Math.random() * 200, radius: 16, speed: Math.random() * 1.5 + 2.5, hp: 100, angle: 0, landed: false, inBush: false, hasWeapon: false, reloading: false, reloadEndTime: 0, reloadTotalTime: 0, currentAmmo: 0, lastShot: 0, targetWeapon: null, pickupTimer: 0, medkits: 1, healing: false, healEndTime: 0, healTotalTime: 3000, recoil: 0 });
+
+                // Nếu là đồng đội thì đẻ gần người chơi
+                if (isMyTeammate) {
+                    while(!esafe) {
+                        ex = player.x + (Math.random() - 0.5) * 200;
+                        ey = player.y + (Math.random() - 0.5) * 200;
+                        if(ex > 100 && ex < mapSize-100 && ey > 100 && ey < mapSize-100 && !getHouseAt(ex, ey, 40)) esafe = true;
+                    }
+                } else {
+                    while(!esafe) {
+                        ex = Math.random() * (mapSize - 400) + 200;
+                        ey = Math.random() * (mapSize - 400) + 200;
+                        if(!getHouseAt(ex, ey, 40)) esafe = true;
+                    }
+                }
+
+                let botTeamId;
+                if (gameMode === 'solo') {
+                    botTeamId = i + 10; // Mỗi bot 1 team riêng
+                } else {
+                    if (isMyTeammate) {
+                        botTeamId = 1;
+                    } else {
+                        botTeamId = currentBotTeamId;
+                        botsInCurrentTeam++;
+                        if (botsInCurrentTeam >= 4) { currentBotTeamId++; botsInCurrentTeam = 0; }
+                    }
+                }
+
+                enemies.push({ 
+                    id: i, name: botName, teamId: botTeamId, 
+                    x: ex, y: ey, z: 250 + Math.random() * 200, radius: 16, speed: Math.random() * 1.5 + 2.5, hp: 100, 
+                    angle: 0, landed: false, inBush: false, hasWeapon: false, reloading: false, reloadEndTime: 0, 
+                    reloadTotalTime: 0, currentAmmo: 0, lastShot: 0, targetWeapon: null, pickupTimer: 0, medkits: 1, 
+                    healing: false, healEndTime: 0, healTotalTime: 3000, recoil: 0 
+                });
             }
 
             let placedCrates = 0, attemptsCrate = 0;
@@ -1114,7 +1268,9 @@
                 lastMatchSaveTime = Date.now();
             }
 
-            let aliveCount = enemies.length + (player.hp > 0 ? 1 : 0);
+            // Tính số lượng kẻ địch thực sự (khác team 1)
+            let aliveCount = enemies.filter(e => e.teamId !== player.teamId).length;
+            if (player.hp > 0) aliveCount++; // Cộng chính mình (mặc định luôn đại diện cho team)
             document.getElementById('aliveText').innerText = aliveCount;
             document.getElementById('bpText').innerText = player.backpack.toFixed(1);
 
@@ -1288,6 +1444,7 @@
                     if (mobileShooting && enemies.length > 0) {
                         let closest = null, minD = Infinity;
                         for(let i=0; i<enemies.length; i++) {
+                            if (enemies[i].teamId === player.teamId) continue; // KHÔNG BẮN ĐỒNG ĐỘI
                             let d = Math.hypot(player.x - enemies[i].x, player.y - enemies[i].y);
                             if(d < 800 && d < minD && checkLineOfSight(player.x, player.y, enemies[i].x, enemies[i].y)) { minD = d; closest = enemies[i]; }
                         }
@@ -1307,6 +1464,7 @@
                 } else if (player.reserveAmmo > 0) { startReload(); }
             }
 
+            // ================== AI BOTS LẬP ĐỘI ==================
             for (let i = enemies.length - 1; i >= 0; i--) {
                 let e = enemies[i]; e.recoil = Math.max(0, e.recoil - 0.8);
                 let eFloorZ = getFloorZ(e.x, e.y, e.radius);
@@ -1328,8 +1486,14 @@
                 if (e.healing) {
                     if (now >= e.healEndTime) { e.healing = false; e.hp = Math.min(100, e.hp + 30); e.medkits--; } 
                     else {
-                        let nearest = player; let dMin = player.hp > 0 ? Math.hypot(e.x - player.x, e.y - player.y) : Infinity;
-                        for (let other of enemies) { if (other === e) continue; let d = Math.hypot(e.x - other.x, e.y - other.y); if(d < dMin) { dMin = d; nearest = other; } }
+                        // Trốn kẻ địch gần nhất
+                        let nearest = null; let dMin = Infinity;
+                        if (player.hp > 0 && player.teamId !== e.teamId) { dMin = Math.hypot(e.x - player.x, e.y - player.y); nearest = player; }
+                        for (let other of enemies) { 
+                            if (other === e || other.teamId === e.teamId) continue; 
+                            let d = Math.hypot(e.x - other.x, e.y - other.y); 
+                            if(d < dMin) { dMin = d; nearest = other; } 
+                        }
                         if (nearest && dMin < 800) { e.angle = Math.atan2(e.y - nearest.y, e.x - nearest.x); moveEx = Math.cos(e.angle) * e.speed * 0.7; moveEy = Math.sin(e.angle) * e.speed * 0.7; }
                     }
                 }
@@ -1357,10 +1521,11 @@
                 } 
                 else if (e.reloading) { if (now >= e.reloadEndTime) { e.reloading = false; e.currentAmmo = 31; } } 
                 else {
+                    // Logic chiến đấu TỔ ĐỘI
                     if (!e.lastAiUpdate || now - e.lastAiUpdate > 400 + (e.id * 10)) {
                         e.lastAiUpdate = now; let possibleTargets = [];
-                        if (player.hp > 0 && player.landed) possibleTargets.push({ entity: player, d: Math.hypot(e.x - player.x, e.y - player.y) });
-                        for (let other of enemies) { if (other === e || !other.landed) continue; possibleTargets.push({ entity: other, d: Math.hypot(e.x - other.x, e.y - other.y) }); }
+                        if (player.hp > 0 && player.landed && player.teamId !== e.teamId) possibleTargets.push({ entity: player, d: Math.hypot(e.x - player.x, e.y - player.y) });
+                        for (let other of enemies) { if (other === e || !other.landed || other.teamId === e.teamId) continue; possibleTargets.push({ entity: other, d: Math.hypot(e.x - other.x, e.y - other.y) }); }
                         possibleTargets.sort((a, b) => a.d - b.d); 
 
                         let target = null, tMinD = Infinity, hasLoS = false;
@@ -1373,6 +1538,7 @@
                     }
 
                     let target = e.currentTarget, tMinD = e.currentTMinD, hasLoS = e.currentHasLoS;
+                    
                     if (target && target.hp > 0 && tMinD < 1200) {
                         tMinD = Math.hypot(e.x - target.x, e.y - target.y); 
                         if (hasLoS) { 
@@ -1388,7 +1554,19 @@
                                 } else { e.reloading = true; let rTime = 3000 + Math.random()*2000; e.reloadEndTime = now + rTime; e.reloadTotalTime = rTime; }
                             }
                         } else { e.angle = Math.atan2(target.y - e.y, target.x - e.x); moveEx = Math.cos(e.angle) * e.speed; moveEy = Math.sin(e.angle) * e.speed; }
-                    } else { e.angle += (Math.random() - 0.5) * 0.1; moveEx = Math.cos(e.angle) * e.speed * 0.5; moveEy = Math.sin(e.angle) * e.speed * 0.5; }
+                    } else { 
+                        // CHẠY THEO PLAYER NẾU LÀ ĐỒNG ĐỘI
+                        if (e.teamId === player.teamId && player.hp > 0) {
+                            let distToPlayer = Math.hypot(e.x - player.x, e.y - player.y);
+                            if (distToPlayer > 150) {
+                                e.angle = Math.atan2(player.y - e.y, player.x - e.x); 
+                                moveEx = Math.cos(e.angle) * e.speed * 0.9; 
+                                moveEy = Math.sin(e.angle) * e.speed * 0.9;
+                            }
+                        } else {
+                            e.angle += (Math.random() - 0.5) * 0.1; moveEx = Math.cos(e.angle) * e.speed * 0.5; moveEy = Math.sin(e.angle) * e.speed * 0.5; 
+                        }
+                    }
                 } 
                 
                 let testHitX = isColliding(e.x + moveEx * 3, e.y, e.radius, 0);
@@ -1429,7 +1607,8 @@
                 b.life--;
                 
                 if (!hit) {
-                    if (b.owner !== player && player.landed && Math.hypot(b.x - player.x, b.y - player.y) < player.radius + 6) {
+                    // Trúng đạn (Bỏ qua nếu cùng team)
+                    if (b.owner !== player && player.landed && b.owner.teamId !== player.teamId && Math.hypot(b.x - player.x, b.y - player.y) < player.radius + 6) {
                         player.hp -= 15; document.getElementById('hpText').innerText = player.hp; createBlood(player.x, player.y);
                         document.getElementById('blood').style.opacity = 1; setTimeout(() => document.getElementById('blood').style.opacity = 0, 200);
                         if (player.hp <= 0) { document.getElementById('statusText').innerText = "TỬ TRẬN!"; document.getElementById('statusText').style.color = "#FF0000"; }
@@ -1438,7 +1617,7 @@
                     else {
                         for (let j = enemies.length - 1; j >= 0; j--) {
                             let e = enemies[j];
-                            if (b.owner !== e && e.landed && Math.hypot(b.x - e.x, b.y - e.y) < e.radius + 6) {
+                            if (b.owner !== e && e.landed && b.owner.teamId !== e.teamId && Math.hypot(b.x - e.x, b.y - e.y) < e.radius + 6) {
                                 e.hp -= 20; createBlood(e.x, e.y); hit = true;
                                 if (e.hp <= 0) { 
                                     let dropped = [];
@@ -1567,6 +1746,17 @@
         function drawEntity(entity, isPlayer) {
             ctx.save(); ctx.translate(entity.x, entity.y);
 
+            // HIỂN THỊ TÊN ĐỒNG ĐỘI
+            if (!isPlayer && entity.teamId === player.teamId && player.hp > 0 && entity.landed) {
+                ctx.save();
+                ctx.fillStyle = '#38bdf8';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(entity.name, 0, -35);
+                ctx.beginPath(); ctx.moveTo(-4, -30); ctx.lineTo(4, -30); ctx.lineTo(0, -25); ctx.fill();
+                ctx.restore();
+            }
+
             if (!isPlayer && entity.healing) {
                 let progress = 1 - ((entity.healEndTime - Date.now()) / entity.healTotalTime); if(progress > 1) progress = 1;
                 ctx.fillStyle = '#000'; ctx.fillRect(-10, -25, 20, 4); ctx.fillStyle = '#27AE60'; ctx.fillRect(-10, -25, 20 * progress, 4);
@@ -1607,14 +1797,14 @@
 
                 if (!entity.shoulderGrad) {
                     entity.shoulderGrad = ctx.createLinearGradient(-15, -15, 15, 15);
-                    if(isPlayer) { entity.shoulderGrad.addColorStop(0, '#3498DB'); entity.shoulderGrad.addColorStop(1, '#21618C'); }
+                    if(isPlayer || entity.teamId === player.teamId) { entity.shoulderGrad.addColorStop(0, '#3498DB'); entity.shoulderGrad.addColorStop(1, '#21618C'); } // Đồng đội áo xanh
                     else { entity.shoulderGrad.addColorStop(0, '#E74C3C'); entity.shoulderGrad.addColorStop(1, '#7B241C'); }
                 }
                 ctx.fillStyle = entity.shoulderGrad; ctx.beginPath(); ctx.ellipse(0, 0, entity.radius + 2, entity.radius - 4, 0, 0, Math.PI*2); ctx.fill();
                 
                 if (!entity.headGrad) {
                     entity.headGrad = ctx.createRadialGradient(-2, -2, 2, 0, 0, 10);
-                    if(isPlayer) { entity.headGrad.addColorStop(0, '#FFE0BD'); entity.headGrad.addColorStop(1, '#E0AC69'); }
+                    if(isPlayer || entity.teamId === player.teamId) { entity.headGrad.addColorStop(0, '#FFE0BD'); entity.headGrad.addColorStop(1, '#E0AC69'); }
                     else { entity.headGrad.addColorStop(0, '#AAB7B8'); entity.headGrad.addColorStop(1, '#515A5A'); } 
                 }
                 ctx.fillStyle = entity.headGrad; ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI*2); ctx.fill();
@@ -1703,7 +1893,9 @@
         function gameLoop() {
             if (!gameActive) return;
 
-            if (player.hp > 0 && enemies.length > 0) {
+            let aliveEnemiesInOtherTeams = enemies.filter(e => e.teamId !== player.teamId && e.hp > 0).length;
+
+            if (player.hp > 0) {
                 update();
                 draw();
             }
@@ -1717,8 +1909,12 @@
                 
                 gameActive = false;
                 localStorage.removeItem('esports_active_match_' + currentUser);
-                setTimeout(() => showStats(enemies.length + 1, score), 3000);
-            } else if (enemies.length === 0 && gameActive) {
+                
+                // Rank dựa trên số team còn sống. (Đơn giản hóa: Số người còn sống / 4)
+                let simulatedRank = Math.max(2, Math.ceil(enemies.length / (gameMode === 'squad' ? 4 : 1)));
+                setTimeout(() => showStats(simulatedRank, score), 3000);
+                
+            } else if (aliveEnemiesInOtherTeams === 0 && gameActive) {
                 gameActive = false;
                 localStorage.removeItem('esports_active_match_' + currentUser);
                 triggerTop1(1, score);
