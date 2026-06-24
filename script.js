@@ -1,116 +1,133 @@
-// --- CẤU HÌNH 9 BẬC RANK & ĐIỂM ---
-const RANK_SYSTEM = [
-    { name: "Gỗ 1", min: 0, max: 499, cssClass: "wood", textClass: "wood-text", tierName: "Gỗ" },
-    { name: "Gỗ 2", min: 500, max: 999, cssClass: "wood", textClass: "wood-text", tierName: "Gỗ" },
-    { name: "Gỗ 3", min: 1000, max: 1499, cssClass: "wood", textClass: "wood-text", tierName: "Gỗ" },
-    { name: "Đá 1", min: 1500, max: 1999, cssClass: "stone", textClass: "stone-text", tierName: "Đá" },
-    { name: "Đá 2", min: 2000, max: 2499, cssClass: "stone", textClass: "stone-text", tierName: "Đá" },
-    { name: "Đá 3", min: 2500, max: 2999, cssClass: "stone", textClass: "stone-text", tierName: "Đá" },
-    { name: "Đá 4", min: 3000, max: 3499, cssClass: "stone", textClass: "stone-text", tierName: "Đá" },
-    { name: "Sắt 1", min: 3500, max: 3999, cssClass: "iron", textClass: "iron-text", tierName: "Sắt" },
-    { name: "Sắt 2", min: 4000, max: 4499, cssClass: "iron", textClass: "iron-text", tierName: "Sắt" },
-    { name: "Sắt 3", min: 4500, max: 4999, cssClass: "iron", textClass: "iron-text", tierName: "Sắt" },
-    { name: "Sắt 4", min: 5000, max: 5499, cssClass: "iron", textClass: "iron-text", tierName: "Sắt" },
-    { name: "Sắt 5", min: 5500, max: 5999, cssClass: "iron", textClass: "iron-text", tierName: "Sắt" },
-    { name: "Vàng 1", min: 6000, max: 6499, cssClass: "gold", textClass: "gold-text", tierName: "Vàng" },
-    { name: "Vàng 2", min: 6500, max: 6999, cssClass: "gold", textClass: "gold-text", tierName: "Vàng" },
-    { name: "Vàng 3", min: 7000, max: 7999, cssClass: "gold", textClass: "gold-text", tierName: "Vàng" },
-    { name: "Kim Cương 1", min: 8000, max: 8999, cssClass: "diamond", textClass: "diamond-text", tierName: "Kim Cương" },
-    { name: "Kim Cương 2", min: 9000, max: 9999, cssClass: "diamond", textClass: "diamond-text", tierName: "Kim Cương" },
-    { name: "Kim Cương 3", min: 10000, max: 11999, cssClass: "diamond", textClass: "diamond-text", tierName: "Kim Cương" },
-    { name: "Cao Thủ 1", min: 12000, max: 12999, cssClass: "master", textClass: "master-text", tierName: "Cao Thủ" },
-    { name: "Cao Thủ 2", min: 13000, max: 13999, cssClass: "master", textClass: "master-text", tierName: "Cao Thủ" },
-    { name: "Cao Thủ 3", min: 14000, max: 14999, cssClass: "master", textClass: "master-text", tierName: "Cao Thủ" },
-    { name: "Đại Cao Thủ", min: 15000, max: 19999, cssClass: "grandmaster", textClass: "grandmaster-text", tierName: "Đại Cao Thủ" },
-    { name: "Chuyên Nghiệp", min: 20000, max: 29999, cssClass: "pro", textClass: "pro-text", tierName: "Chuyên Nghiệp" },
-    { name: "Kiện Tướng Chuyên Nghiệp", min: 30000, max: 1000000, cssClass: "pro-master", textClass: "pro-master-text", tierName: "Kiện Tướng" }
+// Thêm đoạn này vào ngay dưới phần khai báo // --- BIẾN TOÀN CỤC ---
+const RANK_TIERS = [
+    { name: "Gỗ 1", min: 0, max: 499, css: "tier-wood", short: "G1", tierLvl: 1 },
+    { name: "Gỗ 2", min: 500, max: 999, css: "tier-wood", short: "G2", tierLvl: 1 },
+    { name: "Gỗ 3", min: 1000, max: 1499, css: "tier-wood", short: "G3", tierLvl: 1 },
+    { name: "Đá 1", min: 1500, max: 1999, css: "tier-stone", short: "Đ1", tierLvl: 2 },
+    { name: "Đá 2", min: 2000, max: 2499, css: "tier-stone", short: "Đ2", tierLvl: 2 },
+    { name: "Đá 3", min: 2500, max: 2999, css: "tier-stone", short: "Đ3", tierLvl: 2 },
+    { name: "Đá 4", min: 3000, max: 3499, css: "tier-stone", short: "Đ4", tierLvl: 2 },
+    { name: "Sắt 1", min: 3500, max: 3999, css: "tier-iron", short: "S1", tierLvl: 3 },
+    { name: "Sắt 2", min: 4000, max: 4499, css: "tier-iron", short: "S2", tierLvl: 3 },
+    { name: "Sắt 3", min: 4500, max: 4999, css: "tier-iron", short: "S3", tierLvl: 3 },
+    { name: "Sắt 4", min: 5000, max: 5499, css: "tier-iron", short: "S4", tierLvl: 3 },
+    { name: "Sắt 5", min: 5500, max: 5999, css: "tier-iron", short: "S5", tierLvl: 3 },
+    { name: "Vàng 1", min: 6000, max: 6499, css: "tier-gold", short: "V1", tierLvl: 4 },
+    { name: "Vàng 2", min: 6500, max: 6999, css: "tier-gold", short: "V2", tierLvl: 4 },
+    { name: "Vàng 3", min: 7000, max: 7999, css: "tier-gold", short: "V3", tierLvl: 4 },
+    { name: "Kim Cương 1", min: 8000, max: 8999, css: "tier-diamond", short: "KC1", tierLvl: 5 },
+    { name: "Kim Cương 2", min: 9000, max: 9999, css: "tier-diamond", short: "KC2", tierLvl: 5 },
+    { name: "Kim Cương 3", min: 10000, max: 11999, css: "tier-diamond", short: "KC3", tierLvl: 5 },
+    { name: "Cao Thủ 1", min: 12000, max: 12999, css: "tier-master", short: "CT1", tierLvl: 6 },
+    { name: "Cao Thủ 2", min: 13000, max: 13999, css: "tier-master", short: "CT2", tierLvl: 6 },
+    { name: "Cao Thủ 3", min: 14000, max: 14999, css: "tier-master", short: "CT3", tierLvl: 6 },
+    { name: "Đại Cao Thủ", min: 15000, max: 19999, css: "tier-grandmaster", short: "ĐCT", tierLvl: 7 },
+    { name: "Chuyên Nghiệp", min: 20000, max: 29999, css: "tier-pro", short: "CN", tierLvl: 8 },
+    { name: "Kiện Tướng Chuyên Nghiệp", min: 30000, max: 1000000, css: "tier-champion", short: "KT", tierLvl: 9 }
 ];
 
-// Hàm xác định Rank dựa trên điểm
-function getRankInfo(points) {
+function getRankData(points) {
     if (points > 1000000) points = 1000000;
-    for (let i = 0; i < RANK_SYSTEM.length; i++) {
-        if (points >= RANK_SYSTEM[i].min && points <= RANK_SYSTEM[i].max) {
-            return { ...RANK_SYSTEM[i], index: i };
-        }
+    for (let r of RANK_TIERS) {
+        if (points >= r.min && points <= r.max) return r;
     }
-    return { ...RANK_SYSTEM[RANK_SYSTEM.length - 1], index: RANK_SYSTEM.length - 1 };
+    return RANK_TIERS[RANK_TIERS.length - 1];
 }
 
-// Hàm chạy hiệu ứng tăng số điểm mềm mại
-function animateValue(obj, start, end, duration) {
-    let startTimestamp = null;
-    const step = (timestamp) => {
-        if (!startTimestamp) startTimestamp = timestamp;
-        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-        obj.innerHTML = Math.floor(progress * (end - start) + start);
-        if (progress < 1) {
-            window.requestAnimationFrame(step);
-        }
-    };
-    window.requestAnimationFrame(step);
-}
-
-// --- CẬP NHẬT GIAO DIỆN HỒ SƠ ---
-function updateMyStatsUI(oldRankPoints = null) {
+// Thay thế hàm updateMyStatsUI() cũ bằng hàm này:
+function updateMyStatsUI(oldPoints = null) {
     let myData = playersData.find(p => p.id === "me");
-    let currentPoints = myData.rankPoints;
-    
-    // Cập nhật các thông số cũ
+    let currentPts = myData.rankPoints;
+    let rankInfo = getRankData(currentPts);
+
     document.getElementById('my-matches').innerText = myData.matches;
     document.getElementById('my-kills').innerText = myData.kills;
     document.getElementById('my-gun-points').innerText = myData.gunPoints;
     document.getElementById('my-top1').innerText = myData.top1;
 
-    // Phân tích Rank
-    let rankInfo = getRankInfo(currentPoints);
+    // Cập nhật giao diện Rank
     let badge = document.getElementById('my-rank-badge');
-    let title = document.getElementById('my-rank-name');
-    let barFill = document.getElementById('rank-progress-fill');
+    let fill = document.getElementById('rank-progress-fill');
+    let rankName = document.getElementById('my-rank-name');
     
-    // Thay đổi CSS class cho badge & text
-    badge.className = `rank-badge ${rankInfo.cssClass}`;
-    title.className = `rank-title ${rankInfo.textClass}`;
-    title.innerText = rankInfo.name;
+    badge.className = `rank-shield ${rankInfo.css}`;
+    badge.innerHTML = `<span>${rankInfo.short}</span>`;
+    rankName.innerText = rankInfo.name;
+    rankName.style.color = window.getComputedStyle(badge).boxShadow.split(')')[0] + ')'; // Lấy màu glow làm màu chữ
 
-    // Tính toán thanh tiến trình
-    let range = rankInfo.max - rankInfo.min;
-    let pointInRank = currentPoints - rankInfo.min;
-    let percent = (pointInRank / range) * 100;
-    
-    if(currentPoints >= 1000000) percent = 100; // MAX
+    fill.className = `progress-fill ${rankInfo.css}-bg`;
+    document.getElementById('rank-max-pts').innerText = rankInfo.max === 1000000 ? "MAX" : rankInfo.max;
 
-    barFill.style.width = percent + '%';
-    document.getElementById('next-rank-points').innerText = currentPoints >= 1000000 ? "MAX" : rankInfo.max + 1;
+    // Hiệu ứng số điểm chạy
+    animateScoreCounter('animated-rank-pts', oldPoints !== null ? oldPoints : currentPts, currentPts, rankInfo.min, rankInfo.max);
+}
 
-    // Hoạt ảnh số điểm nếu có thay đổi
-    let pointText = document.getElementById('current-points-anim');
-    if (oldRankPoints !== null && oldRankPoints !== currentPoints) {
-        animateValue(pointText, oldRankPoints, currentPoints, 1500);
+function animateScoreCounter(elementId, start, end, min, max) {
+    let obj = document.getElementById(elementId);
+    let fill = document.getElementById('rank-progress-fill');
+    let duration = 1500;
+    let startTime = null;
+
+    function step(timestamp) {
+        if (!startTime) startTime = timestamp;
+        let progress = Math.min((timestamp - startTime) / duration, 1);
+        let currentVal = Math.floor(progress * (end - start) + start);
+        obj.innerHTML = currentVal;
         
-        // Hiển thị floater (Ví dụ: +15 điểm)
-        let floater = document.getElementById('point-floater');
-        let diff = currentPoints - oldRankPoints;
-        floater.innerText = (diff > 0 ? "+" : "") + diff;
-        floater.style.color = diff > 0 ? "#4ade80" : "#ef4444";
-        
-        floater.classList.remove('animate');
-        void floater.offsetWidth; // Trigger reflow
-        floater.classList.add('animate');
+        let percent = max === 1000000 ? 100 : ((currentVal - min) / (max - min)) * 100;
+        fill.style.width = `${Math.max(0, Math.min(100, percent))}%`;
+
+        if (progress < 1) {
+            window.requestAnimationFrame(step);
+        } else {
+            obj.innerHTML = end; // Chốt số chính xác
+        }
+    }
+    window.requestAnimationFrame(step);
+}
+
+// Thay thế hàm triggerTop1() để thêm tham số điểm test linh hoạt hơn
+function triggerTop1(rank, kills, testRankPts = null) {
+    if (rank === 1) {
+        const animBox = document.getElementById('top1-animation');
+        const text = animBox.querySelector('.chicken-dinner');
+        animBox.style.display = 'flex';
+        text.classList.add('show');
+        setTimeout(() => {
+            animBox.style.display = 'none';
+            text.classList.remove('show');
+            showStats(rank, kills, testRankPts);
+        }, 4000);
     } else {
-        pointText.innerText = currentPoints;
+        showStats(rank, kills, testRankPts);
     }
 }
 
-// --- CẬP NHẬT HÀM BACKTOLOBBY LƯU KẾT QUẢ ---
+function showStats(rank, kills, testRankPts) {
+    document.getElementById('game-container').classList.remove('active');
+    document.getElementById('match-stats').classList.add('active');
+
+    // Nếu truyền vào điểm test thì dùng điểm test, nếu không thì dùng tính toán mặc định
+    let rankPts = testRankPts !== null ? testRankPts : calculateRankPoints(rank, kills);
+    let gunPts = calculateGunPoints(rank, kills);
+
+    tempMatchResult = { rankPoints: rankPts, kills: kills, gunPoints: gunPts, rank: rank };
+
+    document.getElementById('stat-top').innerText = rank;
+    document.getElementById('stat-kills').innerText = kills;
+    document.getElementById('stat-rank-pts').innerText = (rankPts > 0 ? "+" : "") + rankPts;
+    document.getElementById('stat-rank-pts').style.color = rankPts < 0 ? "#ef4444" : "#4ade80";
+    document.getElementById('stat-gun-pts').innerText = "+" + gunPts;
+}
+
+// Thay thế hàm backToLobbyAndSave() để kích hoạt Animation Thăng Hạng
 function backToLobbyAndSave() {
     let myData = playersData.find(p => p.id === "me");
     let oldPoints = myData.rankPoints;
-    let oldRankInfo = getRankInfo(oldPoints);
+    let oldRankInfo = getRankData(oldPoints);
 
-    // Cộng điểm
     myData.rankPoints += tempMatchResult.rankPoints;
-    if (myData.rankPoints < 0) myData.rankPoints = 0;
+    if (myData.rankPoints < 0) myData.rankPoints = 0; 
     if (myData.rankPoints > 1000000) myData.rankPoints = 1000000;
 
     myData.kills += tempMatchResult.kills;
@@ -121,35 +138,44 @@ function backToLobbyAndSave() {
     saveData();
     renderLeaderboards();
 
-    // Check thăng hạng lớn (Khác Tier name. VD: Gỗ -> Đá)
-    let newRankInfo = getRankInfo(myData.rankPoints);
-    if (newRankInfo.tierName !== oldRankInfo.tierName && myData.rankPoints > oldPoints) {
-        showRankUpOverlay(newRankInfo);
-    }
+    let newRankInfo = getRankData(myData.rankPoints);
 
-    // Về sảnh và chạy hiệu ứng điểm
     document.getElementById('match-stats').classList.remove('active');
-    document.getElementById('lobby-container').classList.add('active');
     
-    updateMyStatsUI(oldPoints);
-
+    // NẾU TĂNG BẬC RANK CHÍNH (Ví dụ: Gỗ lên Đá, Đá lên Sắt) HOẶC thăng cấp nhỏ
+    // Ở đây tôi thiết lập: Chỉ cần Lên Tier là báo, hoặc Lên cấp (G1->G2) cũng báo cho máu lửa!
+    if (newRankInfo.tierLvl > oldRankInfo.tierLvl || (newRankInfo.min > oldRankInfo.min && tempMatchResult.rankPoints > 0)) {
+        triggerRankUpScreen(newRankInfo, oldPoints);
+    } else {
+        document.getElementById('lobby-container').classList.add('active');
+        updateMyStatsUI(oldPoints);
+    }
+    
     let zone = document.getElementById('blue-zone');
     zone.style.display = 'none'; zone.classList.remove('shrinking');
 }
 
-// --- HIỆU ỨNG THĂNG CẤP LỚN ---
-function showRankUpOverlay(rankInfo) {
-    const overlay = document.getElementById('rank-up-overlay');
-    const badge = document.getElementById('promo-badge');
-    const name = document.getElementById('promo-name');
+// Hàm xử lý Màn hình Thăng Hạng
+function triggerRankUpScreen(rankInfo, oldPoints) {
+    let overlay = document.getElementById('rank-up-overlay');
+    let badge = document.getElementById('overlay-rank-badge');
+    let nameText = document.getElementById('overlay-rank-name');
 
-    badge.className = `rank-badge ${rankInfo.cssClass}`;
-    name.className = `promo-name ${rankInfo.textClass}`;
-    name.innerText = rankInfo.tierName; // Chỉ hiện chữ to: ĐÁ, SẮT, ĐẠI CAO THỦ...
+    badge.className = `rank-shield rank-up-anim ${rankInfo.css}`;
+    badge.innerHTML = `<span>${rankInfo.short}</span>`;
+    nameText.innerText = rankInfo.name;
+    nameText.style.color = window.getComputedStyle(badge).boxShadow.split(')')[0] + ')'; // Đồng bộ màu chữ với glow
 
-    overlay.classList.add('active');
+    // Lưu oldPoints vào attribute để khi tắt overlay, thanh bar ngoài sảnh sẽ chạy animation
+    overlay.setAttribute('data-old-pts', oldPoints);
+    overlay.style.display = 'flex';
 }
 
 function closeRankUp() {
-    document.getElementById('rank-up-overlay').classList.remove('active');
+    let overlay = document.getElementById('rank-up-overlay');
+    let oldPoints = parseInt(overlay.getAttribute('data-old-pts'));
+    overlay.style.display = 'none';
+    
+    document.getElementById('lobby-container').classList.add('active');
+    updateMyStatsUI(oldPoints); // Gọi lại để thanh tiến trình chạy số cực mượt
 }
