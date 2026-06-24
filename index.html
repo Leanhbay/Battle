@@ -22,12 +22,29 @@
                 <h2>Tuyển Thủ: <span class="highlight">Lẻ Anh Bảy</span></h2>
             </div>
             
+            <div class="rank-display-box">
+                <div class="rank-badge-container">
+                    <div id="my-rank-badge" class="rank-badge wood"></div>
+                </div>
+                <div class="rank-info">
+                    <h3 id="my-rank-name" class="rank-title">Gỗ 1</h3>
+                    <div class="progress-wrapper">
+                        <div class="progress-bar-bg">
+                            <div id="rank-progress-fill" class="progress-bar-fill"></div>
+                        </div>
+                        <div class="progress-text">
+                            <span id="current-points-anim">0</span> / <span id="next-rank-points">499</span> Điểm
+                        </div>
+                        <div id="point-floater" class="point-floater">+0</div>
+                    </div>
+                </div>
+            </div>
+
             <div class="stats-grid">
-                <div class="stat-box">Mức Rank<br><strong class="glow-text">Chưa Xếp Hạng</strong></div>
                 <div class="stat-box">Tổng Trận<br><strong id="my-matches" class="glow-text">0</strong></div>
                 <div class="stat-box">Tổng Kills<br><strong id="my-kills" class="glow-text">0</strong></div>
                 <div class="stat-box">Điểm Súng<br><strong id="my-gun-points" class="glow-text">0</strong></div>
-                <div class="stat-box" style="grid-column: span 2;">Tổng Top 1<br><strong id="my-top1" class="glow-text">0</strong></div>
+                <div class="stat-box">Tổng Top 1<br><strong id="my-top1" class="glow-text">0</strong></div>
             </div>
             <button class="start-btn pulse-anim" onclick="startGame()">VÀO TRẬN NGAY</button>
         </div>
@@ -48,14 +65,12 @@
 
     <div id="game-container">
         <h2 style="color: #38bdf8; text-align: center; margin-top: 50px; text-shadow: 0 0 10px #38bdf8;">🔥 ĐANG TRONG TRẬN... 🔥</h2>
-        
         <div class="test-controls">
             <button class="test-btn" onclick="triggerZoneShrink()">🌪️ Test Bo Thu (PUBG)</button>
             <button class="test-btn win" onclick="triggerTop1(1, 12)">🏆 Win Top 1 (12 Kills)</button>
             <button class="test-btn" onclick="triggerTop1(15, 3)">🎖️ Top 15 (3 Kills)</button>
             <button class="test-btn lose" onclick="triggerTop1(45, 1)">💀 Thua Top 45 (1 Kill)</button>
         </div>
-
         <div id="blue-zone"></div>
     </div>
 
@@ -71,6 +86,15 @@
             <div class="stat-row">Điểm Rank: <span id="stat-rank-pts" class="highlight-green"></span></div>
             <div class="stat-row">Điểm Súng: <span id="stat-gun-pts" class="highlight-green"></span></div>
             <button class="start-btn" onclick="backToLobbyAndSave()">LƯU & VỀ SẢNH</button>
+        </div>
+    </div>
+
+    <div id="rank-up-overlay">
+        <div class="rank-up-content">
+            <h1 class="rank-up-title">🎉 THĂNG CẤP! 🎉</h1>
+            <div id="promo-badge" class="rank-badge"></div>
+            <h2 id="promo-name" class="promo-name">Rank Mới</h2>
+            <button class="start-btn" onclick="closeRankUp()">TIẾP TỤC</button>
         </div>
     </div>
 
