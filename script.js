@@ -8,14 +8,34 @@ document.addEventListener('touchmove', e => { if(e.scale !== 1) e.preventDefault
 // --- BIẾN TOÀN CỤC CHỨA INFO SAU TRẬN ĐỂ CẬP NHẬT ---
 let tempMatchResult = { rankPoints: 0, kills: 0, gunPoints: 0 };
 
-// --- DATA NGƯỜI CHƠI (Tích hợp Avatars) ---
+// --- DATA NGƯỜI CHƠI & KHỞI TẠO 1000 BOT (RESET VỀ 0 ĐỂ CÔNG BẰNG) ---
 let playersData = [
-    { id: "me", name: "Lẻ Anh Bảy", rankPoints: 4500, kills: 542, matches: 120, gunPoints: 1150, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lẻ Anh Bảy&backgroundColor=b6e3f4" },
-    { id: "p1", name: "FakerVN", rankPoints: 4800, kills: 610, matches: 150, gunPoints: 1300, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=FakerVN&backgroundColor=c0aede" },
-    { id: "p2", name: "NoobMaster", rankPoints: 3900, kills: 450, matches: 150, gunPoints: 900, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=NoobMaster&backgroundColor=ffdfbf" },
-    { id: "p3", name: "ProSniper", rankPoints: 4200, kills: 500, matches: 110, gunPoints: 1010, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=ProSniper&backgroundColor=d1d4f9" },
-    { id: "p4", name: "ChickenLover", rankPoints: 3800, kills: 420, matches: 140, gunPoints: 850, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=ChickenLover&backgroundColor=ffd5dc" }
+    { id: "me", name: "Lẻ Anh Bảy", rankPoints: 0, kills: 0, matches: 0, gunPoints: 0, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lẻ Anh Bảy&backgroundColor=b6e3f4" }
 ];
+
+// Tạo kho tên ngẫu nhiên độc nhất (10 * 10 * 10 = 1000 tổ hợp tên không trùng)
+const prefixes = ['SátThủ', 'Trùm', 'Vua', 'Kẻ', 'Thần', 'HuyềnThoại', 'ThợSăn', 'ChiếnBinh', 'LãngTử', 'CaoThủ'];
+const roots = ['BắnTỉa', 'NúpBụi', 'ChạyBo', 'SinhTồn', 'LootĐồ', 'GánhTạ', 'CânTeam', 'BoDạo', 'BấtBại', 'HủyDiệt'];
+const suffixes = ['VN', 'Pro', 'GG', 'Gaming', 'Top1', 'Solo', 'No1', '9x', '2k', 'Víp'];
+
+let botCount = 1;
+for (let p of prefixes) {
+    for (let r of roots) {
+        for (let s of suffixes) {
+            let botName = `${p}${r}_${s}`;
+            playersData.push({
+                id: "bot_" + botCount,
+                name: botName,
+                rankPoints: 0,
+                kills: 0,
+                matches: 0,
+                gunPoints: 0,
+                avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${botName}&backgroundColor=bfdbfe`
+            });
+            botCount++;
+        }
+    }
+}
 
 // --- LOGIC CHUYỂN TAB ---
 function switchTab(tabId) {
@@ -39,7 +59,6 @@ function calculateRankPoints(rank, kills) {
     else if (rank >= 31 && rank <= 40) basePoints = -10;
     else if (rank >= 41 && rank <= 50) basePoints = -25;
     
-    // Mỗi kill cộng dồn thêm 1 điểm Rank
     return basePoints + kills;
 }
 
@@ -51,20 +70,20 @@ function calculateGunPoints(rank, kills) {
     return base;
 }
 
-// --- RENDER BẢNG XẾP HẠNG SIÊU ĐẸP ---
+// --- RENDER BẢNG XẾP HẠNG SIÊU ĐẸP (GIỚI HẠN 50 BẬC) ---
 function renderLeaderboards() {
     const renderList = (id, sortKey, label) => {
         const ul = document.getElementById(id);
         ul.innerHTML = "";
         
-        let sorted = [...playersData].sort((a, b) => b[sortKey] - a[sortKey]);
+        // Sắp xếp và chỉ cắt lấy đúng TOP 50 người cao điểm nhất
+        let sorted = [...playersData].sort((a, b) => b[sortKey] - a[sortKey]).slice(0, 50);
         
         sorted.forEach((p, index) => {
             let li = document.createElement("li");
-            // Delay hoạt ảnh trượt vào để mượt mà hơn
-            li.style.animationDelay = `${index * 0.1}s`;
+            // Rút ngắn thời gian delay animation để cuộn mượt và không bị lag khi render lại
+            li.style.animationDelay = `${index * 0.01}s`;
             
-            // Đánh dấu Top 1 2 3 và acc của tôi
             let rankClass = index === 0 ? 'rank-1' : (index === 1 ? 'rank-2' : (index === 2 ? 'rank-3' : ''));
             if (p.id === "me") rankClass += " is-me";
             li.className = rankClass.trim();
@@ -89,8 +108,32 @@ function renderLeaderboards() {
     renderList('list-matches', 'matches', 'Trận Chơi');
     renderList('list-gun', 'gunPoints', 'Điểm Súng');
 }
+
 // Chạy lần đầu
 renderLeaderboards();
+
+// --- MÔ PHỎNG BOT TỰ ĐỘNG CỘNG ĐIỂM NGẪU NHIÊN (1-15 ĐIỂM) TỪNG CHÚT MỘT ---
+setInterval(() => {
+    // Chọn ngẫu nhiên từ 2 đến 4 con bot hoàn thành trận đấu cùng lúc
+    const botsActiveCount = Math.floor(Math.random() * 3) + 2;
+
+    for (let i = 0; i < botsActiveCount; i++) {
+        // Lấy ngẫu nhiên vị trí bot trong mảng (bỏ qua vị trí index 0 của người chơi)
+        let randomBotIndex = Math.floor(Math.random() * (playersData.length - 1)) + 1;
+        let bot = playersData[randomBotIndex];
+
+        // Cộng điểm ngẫu nhiên từ 1 đến 15 theo yêu cầu
+        let pointsGained = Math.floor(Math.random() * 15) + 1;
+
+        bot.rankPoints += pointsGained;
+        bot.gunPoints += pointsGained;
+        bot.kills += Math.max(1, Math.floor(pointsGained / 3)); // Kills tăng thực tế theo điểm số
+        bot.matches += 1; // Tăng thêm 1 trận đấu
+    }
+
+    // Làm mới bảng xếp hạng theo thời gian thực
+    renderLeaderboards();
+}, 4000); // Cứ mỗi 4 giây sẽ có bot được cộng điểm, giúp BXH tăng tiến liên tục nhưng không quá nhanh.
 
 // --- LOGIC TRẬN ĐẤU & LƯU THỐNG KÊ ---
 function startGame() {
@@ -127,48 +170,37 @@ function showStats(rank, kills) {
     let rankPts = calculateRankPoints(rank, kills);
     let gunPts = calculateGunPoints(rank, kills);
 
-    // Lưu tạm vào biến để lát cộng dồn
     tempMatchResult = { rankPoints: rankPts, kills: kills, gunPoints: gunPts };
 
     document.getElementById('stat-top').innerText = rank;
     document.getElementById('stat-kills').innerText = kills;
     document.getElementById('stat-rank-pts').innerText = (rankPts > 0 ? "+" : "") + rankPts;
-    document.getElementById('stat-rank-pts').style.color = rankPts < 0 ? "#ef4444" : "#4ade80"; // Đỏ nếu trừ, xanh nếu cộng
+    document.getElementById('stat-rank-pts').style.color = rankPts < 0 ? "#ef4444" : "#4ade80";
     document.getElementById('stat-gun-pts').innerText = "+" + gunPts;
 }
 
 // --- CẬP NHẬT LÊN BẢNG XẾP HẠNG (THỜI GIAN THỰC) ---
 function backToLobbyAndSave() {
-    // 1. Cập nhật dữ liệu vào acc của mình
     let myData = playersData.find(p => p.id === "me");
     myData.rankPoints += tempMatchResult.rankPoints;
+    // Điểm số của bạn không được âm dưới 0
+    if(myData.rankPoints < 0) myData.rankPoints = 0;
+    
     myData.kills += tempMatchResult.kills;
     myData.gunPoints += tempMatchResult.gunPoints;
     myData.matches += 1;
 
-    // 2. Cập nhật giao diện Profile
     document.getElementById('my-matches').innerText = myData.matches;
     document.getElementById('my-kills').innerText = myData.kills;
     document.getElementById('my-gun-points').innerText = myData.gunPoints;
 
-    // 3. Render lại Bảng Xếp Hạng với dữ liệu mới
     renderLeaderboards();
 
-    // 4. Đổi màn hình về sảnh
     document.getElementById('match-stats').classList.remove('active');
     document.getElementById('lobby-container').classList.add('active');
     
-    // Reset bo thu
     let zone = document.getElementById('blue-zone');
     zone.style.display = 'none'; zone.classList.remove('shrinking');
 
-    // 5. Hiện thông báo (Toast)
-    showToast("Đã lưu và cập nhật Bảng Xếp Hạng!");
-}
-
-function showToast(message) {
-    const toast = document.getElementById('toast-notification');
-    toast.innerText = message;
-    toast.classList.add('show');
-    setTimeout(() => { toast.classList.remove('show'); }, 3000);
+    // Đã loại bỏ hoàn toàn việc gọi hàm showToast thông báo tại đây
 }
