@@ -3,68 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BATTLE ROYALE 2.5D - Mobile & Realistic</title>
+    <title>Sảnh Game Sinh Tồn</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- ================= SẢNH CHỜ (LOBBY) ================= -->
-    <div id="lobby-ui">
-        <div class="lobby-title">PUBG 2.5D WEB</div>
-        
-        <div class="lobby-menu">
-            <button class="lobby-btn btn-play" onclick="startGame()">BẮT ĐẦU VÀO TRẬN</button>
-            <button class="lobby-btn" onclick="showProfile()">Hồ Sơ Của Tôi</button>
-            <button class="lobby-btn" onclick="showLeaderboard('rank')">BXH Điểm Rank</button>
-            <button class="lobby-btn" onclick="showLeaderboard('kills')">BXH Tổng Kills</button>
-            <button class="lobby-btn" onclick="showLeaderboard('matches')">BXH Số Trận</button>
-            <button class="lobby-btn" onclick="showLeaderboard('weapon')">BXH Điểm Súng</button>
+    <div id="lobby-container" class="active">
+        <nav class="lobby-nav">
+            <button class="nav-btn active" onclick="switchTab('profile')">Hồ Sơ Của Tôi</button>
+            <button class="nav-btn" onclick="switchTab('rank')">BXH Rank</button>
+            <button class="nav-btn" onclick="switchTab('kills')">BXH Kills</button>
+            <button class="nav-btn" onclick="switchTab('matches')">BXH Trận</button>
+            <button class="nav-btn" onclick="switchTab('gun')">BXH Điểm Súng</button>
+        </nav>
+
+        <div class="tab-content active" id="tab-profile">
+            <h2>Hồ Sơ: <span class="highlight">Lẻ Anh Bảy</span></h2>
+            <div class="stats-grid">
+                <div class="stat-box">Mức Rank hiện tại<br><strong>Quán Quân</strong></div>
+                <div class="stat-box">Tổng trận<br><strong id="my-matches">120</strong></div>
+                <div class="stat-box">Tổng Kills<br><strong id="my-kills">542</strong></div>
+                <div class="stat-box">Điểm Súng<br><strong id="my-gun-points">1150</strong></div>
+            </div>
+            <button class="start-btn" onclick="startGame()">VÀO TRẬN</button>
         </div>
 
-        <!-- Popup Hồ sơ / BXH -->
-        <div id="lobby-modal" class="modal-hidden">
-            <div class="modal-content">
-                <h2 id="modal-title">Tiêu đề</h2>
-                <div id="modal-body">Nội dung</div>
-                <button class="close-btn" onclick="closeModal()">Đóng</button>
-            </div>
+        <div class="tab-content" id="tab-rank">
+            <h2>Bảng Xếp Hạng Rank</h2>
+            <ul class="leaderboard" id="list-rank"></ul>
+        </div>
+        <div class="tab-content" id="tab-kills">
+            <h2>Bảng Xếp Hạng Kills</h2>
+            <ul class="leaderboard" id="list-kills"></ul>
+        </div>
+        <div class="tab-content" id="tab-matches">
+            <h2>Bảng Xếp Hạng Trận Đã Chơi</h2>
+            <ul class="leaderboard" id="list-matches"></ul>
+        </div>
+        <div class="tab-content" id="tab-gun">
+            <h2>Bảng Xếp Hạng Điểm Súng</h2>
+            <ul class="leaderboard" id="list-gun"></ul>
         </div>
     </div>
 
-    <!-- ================= MÀN HÌNH GAME ================= -->
-    <div id="game-ui" style="display: none;">
-        <div id="ui-layer">
-            <h1>BATTLE ROYALE</h1>
-            <p>Trạng thái: <span id="statusText" style="color: #00FF00;">Đang nhảy dù...</span></p>
-            <p>Điểm: <span id="scoreText">0</span> | HP: <span id="hpText">100</span></p>
-        </div>
-
-        <div id="controls">
-            <strong>PC:</strong> W,A,S,D di chuyển | Chuột ngắm & Bắn | F nhặt/mở.<br>
-            <strong>Mobile:</strong> Dùng Joystick, Nút Bắn & Nút Mở Cửa.
-        </div>
+    <div id="game-container">
+        <h2 style="color: white; text-align: center; margin-top: 50px;">ĐANG TRONG TRẬN...</h2>
         
-        <div class="blood-overlay" id="blood"></div>
-
-        <div id="joystick-zone"><div id="joystick-knob"></div></div>
-        <div id="shoot-btn">BẮN</div>
-        <div id="interact-btn">MỞ</div>
-
-        <!-- Popup Kết thúc trận đấu (Hiện sau 5s khi chết/top 1) -->
-        <div id="post-match-modal" class="modal-hidden">
-            <div class="post-match-box">
-                <h1 id="pm-title">KẾT THÚC TRẬN ĐẤU</h1>
-                <div class="pm-stats">
-                    <p>Xếp hạng: <span id="pm-rank" class="highlight">#1</span></p>
-                    <p>Kills: <span id="pm-kills" class="highlight">0</span></p>
-                    <p>Điểm Rank nhận: <span id="pm-rankpts" class="highlight">+20</span></p>
-                    <p>Điểm Súng nhận: <span id="pm-weaponpts" class="highlight">+5</span></p>
-                </div>
-                <button class="btn-play" onclick="returnToLobby()">TRỞ VỀ SẢNH</button>
-            </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <button onclick="triggerZoneShrink()">Test Bo Thu (PUBG)</button>
+            <button onclick="triggerTop1(1, 8)">Test Win Top 1 (8 Kills)</button>
         </div>
 
-        <canvas id="gameCanvas"></canvas>
+        <div id="blue-zone"></div>
+    </div>
+
+    <div id="top1-animation">
+        <h1 class="chicken-dinner">WINNER WINNER<br>CHICKEN DINNER!</h1>
+    </div>
+
+    <div id="match-stats">
+        <h2>THỐNG KÊ TRẬN ĐẤU</h2>
+        <p>Top: <span id="stat-top" class="highlight"></span></p>
+        <p>Kills: <span id="stat-kills" class="highlight"></span></p>
+        <p>Điểm Rank Nhận Được: <span id="stat-rank-pts" class="highlight"></span></p>
+        <p>Điểm Súng Nhận Được: <span id="stat-gun-pts" class="highlight"></span></p>
+        <button class="start-btn" onclick="backToLobby()">VỀ SẢNH</button>
     </div>
 
     <script src="script.js"></script>
