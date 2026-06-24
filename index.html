@@ -3,55 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sảnh Game Sinh Tồn</title>
+    <title>Sảnh Game Sinh Tồn - eSports</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div id="lobby-container" class="active">
+        <div id="toast-notification">Đã cập nhật Bảng Xếp Hạng!</div>
+
         <nav class="lobby-nav">
             <button class="nav-btn active" onclick="switchTab('profile')">Hồ Sơ Của Tôi</button>
             <button class="nav-btn" onclick="switchTab('rank')">BXH Rank</button>
             <button class="nav-btn" onclick="switchTab('kills')">BXH Kills</button>
             <button class="nav-btn" onclick="switchTab('matches')">BXH Trận</button>
-            <button class="nav-btn" onclick="switchTab('gun')">BXH Điểm Súng</button>
+            <button class="nav-btn" onclick="switchTab('gun')">BXH Súng</button>
         </nav>
 
         <div class="tab-content active" id="tab-profile">
-            <h2>Hồ Sơ: <span class="highlight">Lẻ Anh Bảy</span></h2>
-            <div class="stats-grid">
-                <div class="stat-box">Mức Rank hiện tại<br><strong>Quán Quân</strong></div>
-                <div class="stat-box">Tổng trận<br><strong id="my-matches">120</strong></div>
-                <div class="stat-box">Tổng Kills<br><strong id="my-kills">542</strong></div>
-                <div class="stat-box">Điểm Súng<br><strong id="my-gun-points">1150</strong></div>
+            <div class="profile-header">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Lẻ Anh Bảy&backgroundColor=b6e3f4" alt="Avatar" class="main-avatar">
+                <h2>Tuyển Thủ: <span class="highlight">Lẻ Anh Bảy</span></h2>
             </div>
-            <button class="start-btn" onclick="startGame()">VÀO TRẬN</button>
+            
+            <div class="stats-grid">
+                <div class="stat-box">Mức Rank<br><strong class="glow-text">Quán Quân</strong></div>
+                <div class="stat-box">Tổng Trận<br><strong id="my-matches" class="glow-text">120</strong></div>
+                <div class="stat-box">Tổng Kills<br><strong id="my-kills" class="glow-text">542</strong></div>
+                <div class="stat-box">Điểm Súng<br><strong id="my-gun-points" class="glow-text">1150</strong></div>
+            </div>
+            <button class="start-btn pulse-anim" onclick="startGame()">VÀO TRẬN NGAY</button>
         </div>
 
         <div class="tab-content" id="tab-rank">
-            <h2>Bảng Xếp Hạng Rank</h2>
+            <h2 class="tab-title">🏆 Bảng Xếp Hạng Rank</h2>
             <ul class="leaderboard" id="list-rank"></ul>
         </div>
         <div class="tab-content" id="tab-kills">
-            <h2>Bảng Xếp Hạng Kills</h2>
+            <h2 class="tab-title">⚔️ Bảng Xếp Hạng Kills</h2>
             <ul class="leaderboard" id="list-kills"></ul>
         </div>
         <div class="tab-content" id="tab-matches">
-            <h2>Bảng Xếp Hạng Trận Đã Chơi</h2>
+            <h2 class="tab-title">🔥 Bảng Xếp Hạng Trận Đã Chơi</h2>
             <ul class="leaderboard" id="list-matches"></ul>
         </div>
         <div class="tab-content" id="tab-gun">
-            <h2>Bảng Xếp Hạng Điểm Súng</h2>
+            <h2 class="tab-title">🔫 Bảng Xếp Hạng Điểm Súng</h2>
             <ul class="leaderboard" id="list-gun"></ul>
         </div>
     </div>
 
     <div id="game-container">
-        <h2 style="color: white; text-align: center; margin-top: 50px;">ĐANG TRONG TRẬN...</h2>
+        <h2 style="color: #38bdf8; text-align: center; margin-top: 50px; text-shadow: 0 0 10px #38bdf8;">🔥 ĐANG TRONG TRẬN... 🔥</h2>
         
-        <div style="text-align: center; margin-top: 20px;">
-            <button onclick="triggerZoneShrink()">Test Bo Thu (PUBG)</button>
-            <button onclick="triggerTop1(1, 8)">Test Win Top 1 (8 Kills)</button>
+        <div class="test-controls">
+            <button class="test-btn" onclick="triggerZoneShrink()">🌪️ Test Bo Thu (PUBG)</button>
+            <button class="test-btn win" onclick="triggerTop1(1, 12)">🏆 Win Top 1 (12 Kills)</button>
+            <button class="test-btn" onclick="triggerTop1(15, 3)">🎖️ Top 15 (3 Kills)</button>
+            <button class="test-btn lose" onclick="triggerTop1(45, 1)">💀 Thua Top 45 (1 Kill)</button>
         </div>
 
         <div id="blue-zone"></div>
@@ -62,12 +70,14 @@
     </div>
 
     <div id="match-stats">
-        <h2>THỐNG KÊ TRẬN ĐẤU</h2>
-        <p>Top: <span id="stat-top" class="highlight"></span></p>
-        <p>Kills: <span id="stat-kills" class="highlight"></span></p>
-        <p>Điểm Rank Nhận Được: <span id="stat-rank-pts" class="highlight"></span></p>
-        <p>Điểm Súng Nhận Được: <span id="stat-gun-pts" class="highlight"></span></p>
-        <button class="start-btn" onclick="backToLobby()">VỀ SẢNH</button>
+        <div class="stats-panel">
+            <h2>📊 THỐNG KÊ TRẬN ĐẤU</h2>
+            <div class="stat-row">Xếp hạng: <span id="stat-top" class="highlight"></span></div>
+            <div class="stat-row">Số Kills: <span id="stat-kills" class="highlight"></span></div>
+            <div class="stat-row">Điểm Rank: <span id="stat-rank-pts" class="highlight-green"></span></div>
+            <div class="stat-row">Điểm Súng: <span id="stat-gun-pts" class="highlight-green"></span></div>
+            <button class="start-btn" onclick="backToLobbyAndSave()">LƯU & VỀ SẢNH</button>
+        </div>
     </div>
 
     <script src="script.js"></script>
