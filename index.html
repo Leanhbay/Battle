@@ -4,7 +4,144 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sảnh Game Sinh Tồn - eSports</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        /* --- BẢO VỆ GIAO DIỆN --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: radial-gradient(circle at center, #1e293b, #020617); color: #e2e8f0; overflow: hidden; touch-action: none; height: 100vh; width: 100vw; }
+        
+        /* --- TÙY CHỈNH THANH CUỘN (SCROLLBAR) --- */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.5); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #38bdf8; }
+        
+        /* --- SẢNH GAME --- */
+        #lobby-container, #game-container, #match-stats { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+        #lobby-container.active, #game-container.active, #match-stats.active { display: flex; flex-direction: column; }
+        
+        /* Thanh điều hướng */
+        .lobby-nav { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; padding: 15px; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5); z-index: 10; }
+        .nav-btn { background: rgba(255, 255, 255, 0.05); color: #94a3b8; border: 1px solid rgba(255, 255, 255, 0.1); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
+        .nav-btn:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
+        .nav-btn.active { color: #000; background: linear-gradient(45deg, #fbbf24, #f59e0b); border-color: #fbbf24; box-shadow: 0 0 15px rgba(251, 191, 36, 0.4); }
+        
+        /* Nội dung Tab */
+        .tab-content { display: none; flex: 1; padding: 30px 15px; max-width: 800px; margin: 0 auto; width: 100%; overflow-y: auto; overflow-x: hidden; }
+        .tab-content.active { display: block; animation: fadeInZoom 0.4s ease-out; }
+        .tab-title { text-align: center; margin-bottom: 20px; color: #f8fafc; font-size: 24px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        
+        /* Hồ Sơ */
+        .profile-header { text-align: center; margin-bottom: 20px; }
+        .main-avatar { width: 100px; height: 100px; border-radius: 50%; border: 3px solid #38bdf8; box-shadow: 0 0 20px rgba(56, 189, 248, 0.5); margin-bottom: 15px; }
+        .highlight { color: #fbbf24; font-weight: bold; }
+        .highlight-green { color: #4ade80; font-weight: bold; text-shadow: 0 0 10px rgba(74, 222, 128, 0.5); }
+        .glow-text { color: #38bdf8; font-size: 26px; text-shadow: 0 0 10px rgba(56, 189, 248, 0.6); display: block; margin-top: 10px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .stat-box { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); padding: 20px 10px; border-radius: 15px; text-align: center; backdrop-filter: blur(5px); transition: transform 0.3s; }
+        .stat-box:hover { transform: translateY(-5px); border-color: rgba(56, 189, 248, 0.3); }
+        
+        /* Nút bấm hiệu ứng */
+        .start-btn { width: 100%; margin-top: 30px; padding: 18px; background: linear-gradient(45deg, #ea580c, #dc2626); color: white; border: none; font-size: 20px; font-weight: 900; border-radius: 12px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4); transition: all 0.2s; }
+        .start-btn:active { transform: scale(0.95); }
+        .pulse-anim { animation: pulse 2s infinite; }
+        
+        /* --- BẢNG XẾP HẠNG --- */
+        .leaderboard { list-style: none; padding-bottom: 50px; }
+        .leaderboard li { display: flex; align-items: center; justify-content: space-between; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255,255,255,0.05); margin-bottom: 12px; border-radius: 12px; padding: 12px 20px; backdrop-filter: blur(10px); transition: all 0.3s ease; }
+        .leaderboard li:hover { transform: scale(1.02) translateX(0) !important; background: rgba(51, 65, 85, 0.9); box-shadow: 0 10px 20px rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.2); z-index: 2; position: relative; }
+        .animate-slide { opacity: 0; transform: translateX(30px); animation: slideInRight 0.5s forwards ease-out; }
+        .player-info { display: flex; align-items: center; gap: 15px; flex: 1; }
+        .rank-number { font-size: 22px; font-weight: 900; width: 35px; text-align: center; color: #64748b; }
+        .player-avatar { width: 45px; height: 45px; border-radius: 50%; background: #0f172a; border: 2px solid transparent; }
+        .player-name { font-size: 16px; font-weight: bold; color: #f1f5f9; }
+        .player-score { text-align: right; }
+        .score-value { display: block; font-size: 20px; font-weight: 900; color: #38bdf8; }
+        .score-label { font-size: 11px; color: #94a3b8; text-transform: uppercase; }
+        
+        /* Top 1, 2, 3 Ranks */
+        .rank-1 { background: linear-gradient(90deg, rgba(251, 191, 36, 0.15), rgba(30, 41, 59, 0.8)) !important; border-left: 4px solid #fbbf24 !important; }
+        .rank-1 .rank-number { color: #fbbf24; text-shadow: 0 0 15px #fbbf24; }
+        .rank-1 .player-avatar { border-color: #fbbf24; box-shadow: 0 0 10px #fbbf24; }
+        .rank-2 { background: linear-gradient(90deg, rgba(148, 163, 184, 0.15), rgba(30, 41, 59, 0.8)) !important; border-left: 4px solid #cbd5e1 !important; }
+        .rank-2 .rank-number { color: #cbd5e1; text-shadow: 0 0 15px #cbd5e1; }
+        .rank-2 .player-avatar { border-color: #cbd5e1; }
+        .rank-3 { background: linear-gradient(90deg, rgba(180, 83, 9, 0.15), rgba(30, 41, 59, 0.8)) !important; border-left: 4px solid #d97706 !important; }
+        .rank-3 .rank-number { color: #d97706; text-shadow: 0 0 15px #d97706; }
+        .rank-3 .player-avatar { border-color: #d97706; }
+        .is-me { border: 1px solid #38bdf8 !important; box-shadow: inset 0 0 20px rgba(56, 189, 248, 0.2); }
+        
+        /* --- BẢNG THỐNG KÊ --- */
+        #match-stats { background: rgba(2, 6, 23, 0.95); justify-content: center; align-items: center; padding: 20px; z-index: 1000; backdrop-filter: blur(15px); }
+        .stats-panel { background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        .stats-panel h2 { color: #fbbf24; margin-bottom: 30px; font-size: 28px; }
+        .stat-row { display: flex; justify-content: space-between; font-size: 20px; margin-bottom: 15px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 10px; }
+        
+        /* Nút Test */
+        .test-controls { display: flex; flex-direction: column; gap: 10px; max-width: 300px; margin: 30px auto; }
+        .test-btn { background: #334155; color: white; border: none; padding: 15px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .test-btn.win { background: #059669; }
+        .test-btn.lose { background: #be123c; }
+        .test-btn:hover { filter: brightness(1.2); }
+        
+        /* Hoạt ảnh Game */
+        @keyframes slideInRight { to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeInZoom { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
+        @keyframes epicWin { 0% { transform: scale(0); opacity: 0; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+        
+        #top1-animation { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.85); justify-content: center; align-items: center; z-index: 999; }
+        .chicken-dinner { color: #fbbf24; font-size: 8vw; text-align: center; text-shadow: 0 0 30px rgba(251, 191, 36, 1), 5px 5px 0px #b45309; transform: scale(0); opacity: 0; }
+        .chicken-dinner.show { animation: epicWin 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        #blue-zone { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200vw; height: 200vh; box-shadow: 0 0 0 3000px rgba(0, 100, 255, 0.2); border: 3px solid #38bdf8; border-radius: 50%; pointer-events: none; transition: width 10s linear, height 10s linear; z-index: 500; display: none; }
+        #blue-zone.shrinking { width: 10vw; height: 10vw; border-color: #ef4444; box-shadow: 0 0 0 3000px rgba(239, 68, 68, 0.4); }
+
+        /* --- HỆ THỐNG RANK CSS SIÊU ĐẸP --- */
+        .rank-box-container { background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9)) !important; border: 1px solid rgba(56, 189, 248, 0.3) !important; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); overflow: hidden; position: relative; }
+        .rank-display { display: flex; align-items: center; gap: 20px; padding: 10px; }
+        .rank-shield { width: 80px; height: 80px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 900; color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); position: relative; z-index: 2; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .rank-shield::before { content: ''; position: absolute; inset: 4px; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); background: rgba(0,0,0,0.4); z-index: -1; }
+        
+        .tier-wood { background: linear-gradient(135deg, #8B5A2B, #CD853F); box-shadow: 0 0 15px #8B5A2B; }
+        .tier-wood-bg { background: linear-gradient(90deg, #8B5A2B, #CD853F); }
+        .tier-stone { background: linear-gradient(135deg, #708090, #A9A9A9); box-shadow: 0 0 15px #A9A9A9; }
+        .tier-stone-bg { background: linear-gradient(90deg, #708090, #A9A9A9); }
+        .tier-iron { background: linear-gradient(135deg, #4682B4, #5F9EA0); box-shadow: 0 0 20px #4682B4; }
+        .tier-iron-bg { background: linear-gradient(90deg, #4682B4, #5F9EA0); }
+        .tier-gold { background: linear-gradient(135deg, #FFD700, #FFA500); box-shadow: 0 0 25px #FFD700; color: #fff !important; }
+        .tier-gold-bg { background: linear-gradient(90deg, #FFD700, #FFA500); }
+        .tier-diamond { background: linear-gradient(135deg, #00FFFF, #1E90FF); box-shadow: 0 0 30px #00FFFF; }
+        .tier-diamond-bg { background: linear-gradient(90deg, #00FFFF, #1E90FF); }
+        .tier-master { background: linear-gradient(135deg, #8A2BE2, #FF00FF); box-shadow: 0 0 35px #FF00FF; }
+        .tier-master-bg { background: linear-gradient(90deg, #8A2BE2, #FF00FF); }
+        .tier-grandmaster { background: linear-gradient(135deg, #FF0000, #FF4500); box-shadow: 0 0 40px #FF0000; animation: grandmasterPulse 2s infinite; }
+        .tier-grandmaster-bg { background: linear-gradient(90deg, #FF0000, #FF4500); }
+        .tier-pro { background: linear-gradient(135deg, #000080, #4169E1, #00BFFF); box-shadow: 0 0 45px #4169E1; animation: grandmasterPulse 1.5s infinite; }
+        .tier-pro-bg { background: linear-gradient(90deg, #000080, #4169E1); }
+        .tier-champion { background: linear-gradient(135deg, #FF0000, #FFD700, #00FF00, #00FFFF, #FF00FF); background-size: 300% 300%; box-shadow: 0 0 50px #FFD700; animation: rainbowRank 3s ease infinite; }
+        .tier-champion-bg { background: linear-gradient(90deg, #FF0000, #FFD700, #00FFFF, #FF00FF); background-size: 300% 300%; animation: rainbowRank 3s ease infinite; }
+        
+        @keyframes grandmasterPulse { 0% { filter: drop-shadow(0 0 10px red); } 50% { filter: drop-shadow(0 0 25px orange); } 100% { filter: drop-shadow(0 0 10px red); } }
+        @keyframes rainbowRank { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        
+        .rank-info { flex: 1; text-align: left; }
+        .rank-name-text { font-size: 24px; font-weight: 900; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .progress-wrapper { width: 100%; position: relative; }
+        .progress-track { width: 100%; height: 12px; background: rgba(0, 0, 0, 0.5); border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
+        .progress-fill { height: 100%; width: 0%; border-radius: 10px; transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        .progress-text { margin-top: 5px; font-size: 13px; color: #94a3b8; font-weight: bold; text-align: right; font-family: monospace; }
+        
+        /* OVERLAY THĂNG HẠNG */
+        #rank-up-overlay { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(2, 6, 23, 0.95); backdrop-filter: blur(20px); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
+        .rank-up-content { text-align: center; position: relative; z-index: 2; animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .rank-up-title { color: #fbbf24; font-size: 30px; letter-spacing: 5px; margin-bottom: 30px; text-shadow: 0 0 20px #fbbf24; }
+        .rank-up-anim { width: 180px; height: 180px; font-size: 60px; margin: 0 auto 30px; animation: floatRank 3s ease-in-out infinite; }
+        .rank-up-name-glow { font-size: 45px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 30px rgba(255,255,255,0.8); margin-bottom: 20px; }
+        .epic-rays { position: absolute; top: 50%; left: 50%; width: 200vw; height: 200vw; background: repeating-conic-gradient(from 0deg, transparent 0deg 15deg, rgba(255,255,255,0.05) 15deg 30deg); transform: translate(-50%, -50%); z-index: -1; animation: spinRays 20s linear infinite; pointer-events: none; }
+        
+        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; filter: blur(10px); } 100% { transform: scale(1); opacity: 1; filter: blur(0); } }
+        @keyframes floatRank { 0% { transform: translateY(0); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0); } }
+        @keyframes spinRays { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
+    </style>
 </head>
 <body>
 
@@ -100,6 +237,373 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // --- BẢO VỆ GIAO DIỆN ---
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.keyCode == 123 || (e.ctrlKey && e.shiftKey && e.keyCode == 73) || (e.ctrlKey && e.keyCode == 85)) { e.preventDefault(); }
+        });
+        document.addEventListener('touchmove', e => { if(e.scale !== 1) e.preventDefault(); }, { passive: false });
+
+        // --- BIẾN TOÀN CỤC ---
+        let tempMatchResult = { rankPoints: 0, kills: 0, gunPoints: 0, rank: 0 };
+        let playersData = [];
+
+        const RANK_TIERS = [
+            { name: "Gỗ 1", min: 0, max: 499, css: "tier-wood", short: "G1", tierLvl: 1 },
+            { name: "Gỗ 2", min: 500, max: 999, css: "tier-wood", short: "G2", tierLvl: 1 },
+            { name: "Gỗ 3", min: 1000, max: 1499, css: "tier-wood", short: "G3", tierLvl: 1 },
+            { name: "Đá 1", min: 1500, max: 1999, css: "tier-stone", short: "Đ1", tierLvl: 2 },
+            { name: "Đá 2", min: 2000, max: 2499, css: "tier-stone", short: "Đ2", tierLvl: 2 },
+            { name: "Đá 3", min: 2500, max: 2999, css: "tier-stone", short: "Đ3", tierLvl: 2 },
+            { name: "Đá 4", min: 3000, max: 3499, css: "tier-stone", short: "Đ4", tierLvl: 2 },
+            { name: "Sắt 1", min: 3500, max: 3999, css: "tier-iron", short: "S1", tierLvl: 3 },
+            { name: "Sắt 2", min: 4000, max: 4499, css: "tier-iron", short: "S2", tierLvl: 3 },
+            { name: "Sắt 3", min: 4500, max: 4999, css: "tier-iron", short: "S3", tierLvl: 3 },
+            { name: "Sắt 4", min: 5000, max: 5499, css: "tier-iron", short: "S4", tierLvl: 3 },
+            { name: "Sắt 5", min: 5500, max: 5999, css: "tier-iron", short: "S5", tierLvl: 3 },
+            { name: "Vàng 1", min: 6000, max: 6499, css: "tier-gold", short: "V1", tierLvl: 4 },
+            { name: "Vàng 2", min: 6500, max: 6999, css: "tier-gold", short: "V2", tierLvl: 4 },
+            { name: "Vàng 3", min: 7000, max: 7999, css: "tier-gold", short: "V3", tierLvl: 4 },
+            { name: "Kim Cương 1", min: 8000, max: 8999, css: "tier-diamond", short: "KC1", tierLvl: 5 },
+            { name: "Kim Cương 2", min: 9000, max: 9999, css: "tier-diamond", short: "KC2", tierLvl: 5 },
+            { name: "Kim Cương 3", min: 10000, max: 11999, css: "tier-diamond", short: "KC3", tierLvl: 5 },
+            { name: "Cao Thủ 1", min: 12000, max: 12999, css: "tier-master", short: "CT1", tierLvl: 6 },
+            { name: "Cao Thủ 2", min: 13000, max: 13999, css: "tier-master", short: "CT2", tierLvl: 6 },
+            { name: "Cao Thủ 3", min: 14000, max: 14999, css: "tier-master", short: "CT3", tierLvl: 6 },
+            { name: "Đại Cao Thủ", min: 15000, max: 19999, css: "tier-grandmaster", short: "ĐCT", tierLvl: 7 },
+            { name: "Chuyên Nghiệp", min: 20000, max: 29999, css: "tier-pro", short: "CN", tierLvl: 8 },
+            { name: "Kiện Tướng Chuyên Nghiệp", min: 30000, max: 1000000, css: "tier-champion", short: "KT", tierLvl: 9 }
+        ];
+
+        const botNamesList = [
+            "FakerVN", "NoobMaster", "ProSniper", "ChickenLover", "DarkKnight", "ShadowNinja", "GhostRider", 
+            "DragonSlayer", "IronMan", "Captain", "Thor", "Hulk", "BlackWidow", "Hawkeye", "Superman", 
+            "Batman", "Flash", "Aquaman", "WonderWoman", "Cyborg", "Joker", "HarleyQuinn", "Thanos", 
+            "Loki", "Ultron", "Venom", "Deadpool", "Wolverine", "Magneto", "ProfessorX", "Storm", 
+            "JeanGrey", "Cyclops", "Beast", "Nightcrawler", "Rogue", "Gambit", "Iceman", "Colossus", 
+            "KittyPryde", "EmmaFrost", "Mystique", "Sabretooth", "Juggernaut", "Toad", "Blob", "Pyro"
+        ];
+
+        function loadData() {
+            let savedData = localStorage.getItem('esports_game_data');
+            let lastOnline = localStorage.getItem('esports_lastOnline');
+            let now = Date.now();
+
+            if (savedData) {
+                playersData = JSON.parse(savedData);
+                if (lastOnline) {
+                    let offlineTimeMs = now - parseInt(lastOnline);
+                    let offlineCycles = Math.floor(offlineTimeMs / 5000);
+                    if (offlineCycles > 0) {
+                        if (offlineCycles > 10000) offlineCycles = 10000;
+                        for (let i = 0; i < offlineCycles; i++) {
+                            simulateBots(false);
+                        }
+                    }
+                }
+            } else {
+                initBots();
+            }
+
+            saveData();
+            updateMyStatsUI();
+            renderLeaderboards();
+        }
+
+        function initBots() {
+            playersData = [
+                { id: "me", name: "Lẻ Anh Bảy", rankPoints: 0, kills: 0, matches: 0, gunPoints: 0, top1: 0, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Lẻ Anh Bảy&backgroundColor=b6e3f4" }
+            ];
+
+            let shuffledNames = botNamesList.sort(() => 0.5 - Math.random());
+            const bgColors = ['b6e3f4','c0aede','ffdfbf','d1d4f9','ffd5dc', 'ffc0cb', 'a0cecb'];
+
+            for(let i = 1; i <= 2000; i++) {
+                let baseName = shuffledNames[i % shuffledNames.length];
+                let botName = i > shuffledNames.length ? baseName + "_" + Math.floor(Math.random() * 9999) : baseName;
+                
+                playersData.push({
+                    id: "bot_" + i, name: botName, rankPoints: 0, kills: 0, matches: 0, gunPoints: 0, top1: 0,
+                    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${botName}&backgroundColor=${bgColors[Math.floor(Math.random() * bgColors.length)]}`
+                });
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('esports_game_data', JSON.stringify(playersData));
+            localStorage.setItem('esports_lastOnline', Date.now().toString());
+        }
+
+        function getRankData(points) {
+            if (points > 1000000) points = 1000000;
+            for (let r of RANK_TIERS) {
+                if (points >= r.min && points <= r.max) return r;
+            }
+            return RANK_TIERS[RANK_TIERS.length - 1];
+        }
+
+        function updateMyStatsUI(oldPoints = null) {
+            let myData = playersData.find(p => p.id === "me");
+            let currentPts = myData.rankPoints;
+            let rankInfo = getRankData(currentPts);
+
+            document.getElementById('my-matches').innerText = myData.matches;
+            document.getElementById('my-kills').innerText = myData.kills;
+            document.getElementById('my-gun-points').innerText = myData.gunPoints;
+            document.getElementById('my-top1').innerText = myData.top1;
+
+            let badge = document.getElementById('my-rank-badge');
+            let fill = document.getElementById('rank-progress-fill');
+            let rankName = document.getElementById('my-rank-name');
+            
+            badge.className = `rank-shield ${rankInfo.css}`;
+            badge.innerHTML = `<span>${rankInfo.short}</span>`;
+            rankName.innerText = rankInfo.name;
+            
+            setTimeout(() => {
+                rankName.style.color = window.getComputedStyle(badge).boxShadow.split(')')[0] + ')';
+            }, 20);
+
+            fill.className = `progress-fill ${rankInfo.css}-bg`;
+            document.getElementById('rank-max-pts').innerText = rankInfo.max === 1000000 ? "MAX" : rankInfo.max;
+
+            animateScoreCounter('animated-rank-pts', oldPoints !== null ? oldPoints : currentPts, currentPts, rankInfo.min, rankInfo.max);
+        }
+
+        function animateScoreCounter(elementId, start, end, min, max) {
+            let obj = document.getElementById(elementId);
+            let fill = document.getElementById('rank-progress-fill');
+            let duration = 1500;
+            let startTime = null;
+
+            function step(timestamp) {
+                if (!startTime) startTime = timestamp;
+                let progress = Math.min((timestamp - startTime) / duration, 1);
+                let currentVal = Math.floor(progress * (end - start) + start);
+                obj.innerHTML = currentVal;
+                
+                let percent = max === 1000000 ? 100 : ((currentVal - min) / (max - min)) * 100;
+                fill.style.width = `${Math.max(0, Math.min(100, percent))}%`;
+
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    obj.innerHTML = end; 
+                }
+            }
+            window.requestAnimationFrame(step);
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+        }
+
+        function calculateRankPoints(rank, kills) {
+            let basePoints = 0;
+            if (rank === 1) basePoints = 20;
+            else if (rank === 2) basePoints = 15;
+            else if (rank === 3) basePoints = 10;
+            else if (rank === 4) basePoints = 8;
+            else if (rank === 5) basePoints = 5;
+            else if (rank >= 6 && rank <= 15) basePoints = 1;
+            else if (rank >= 16 && rank <= 21) basePoints = 0;
+            else if (rank >= 22 && rank <= 30) basePoints = -5;
+            else if (rank >= 31 && rank <= 40) basePoints = -10;
+            else if (rank >= 41 && rank <= 50) basePoints = -25;
+            return basePoints + kills;
+        }
+
+        function calculateGunPoints(rank, kills) {
+            let base = kills * 2;
+            if (rank === 1) return base + 3;
+            if (rank === 2) return base + 2;
+            if (rank === 3) return base + 1;
+            return base;
+        }
+
+        function renderLeaderboards() {
+            const renderList = (id, sortKey, label) => {
+                const ul = document.getElementById(id);
+                if(!ul) return;
+                let sorted = [...playersData].sort((a, b) => b[sortKey] - a[sortKey]).slice(0, 100);
+                
+                if (ul.children.length === 0) {
+                    sorted.forEach((p, index) => {
+                        let li = document.createElement("li");
+                        li.className = "animate-slide";
+                        li.style.animationDelay = `${index * 0.02}s`;
+                        ul.appendChild(li);
+                    });
+                }
+                
+                sorted.forEach((p, index) => {
+                    let li = ul.children[index];
+                    let rankClass = index === 0 ? 'rank-1' : (index === 1 ? 'rank-2' : (index === 2 ? 'rank-3' : ''));
+                    if (p.id === "me") rankClass += " is-me";
+                    li.className = rankClass.trim() || 'normal-rank';
+
+                    li.innerHTML = `
+                        <div class="player-info">
+                            <div class="rank-number">#${index + 1}</div>
+                            <img src="${p.avatar}" class="player-avatar">
+                            <span class="player-name">${p.name}</span>
+                        </div>
+                        <div class="player-score">
+                            <span class="score-value">${p[sortKey]}</span>
+                            <span class="score-label">${label}</span>
+                        </div>
+                    `;
+                });
+            };
+
+            renderList('list-rank', 'rankPoints', 'Điểm Rank');
+            renderList('list-kills', 'kills', 'Tổng Kills');
+            renderList('list-gun', 'gunPoints', 'Điểm Súng');
+        }
+
+        function simulateBots(isOnline = true) {
+            let numMatches = Math.floor(Math.random() * 11) + 5; 
+            for(let i = 0; i < numMatches; i++) {
+                let winnerIndex = Math.floor(Math.random() * 2000) + 1;
+                let winner = playersData[winnerIndex];
+                if(!winner) continue;
+                
+                winner.top1 += 1;
+                winner.matches += 1;
+                winner.rankPoints += Math.floor(Math.random() * 10) + 15;
+                winner.kills += Math.floor(Math.random() * 10) + 5;
+                winner.gunPoints += Math.floor(Math.random() * 15) + 5;
+
+                let numLosers = Math.floor(Math.random() * 5) + 3;
+                for (let j = 0; j < numLosers; j++) {
+                    let loserIndex = Math.floor(Math.random() * 2000) + 1;
+                    let loser = playersData[loserIndex];
+                    if(!loser) continue;
+                    
+                    loser.matches += 1;
+                    loser.kills += Math.floor(Math.random() * 4);
+                    loser.rankPoints += Math.floor(Math.random() * 5) - 2;
+                    if (loser.rankPoints < 0) loser.rankPoints = 0;
+                    loser.gunPoints += Math.floor(Math.random() * 5);
+                }
+            }
+            if (isOnline) {
+                saveData();
+                if (document.getElementById('lobby-container').classList.contains('active')) {
+                    renderLeaderboards();
+                }
+            }
+        }
+
+        setInterval(() => simulateBots(true), 5000);
+
+        function startGame() {
+            document.getElementById('lobby-container').classList.remove('active');
+            document.getElementById('game-container').classList.add('active');
+        }
+
+        function triggerZoneShrink() {
+            const zone = document.getElementById('blue-zone');
+            zone.style.display = 'block';
+            setTimeout(() => zone.classList.add('shrinking'), 100);
+        }
+
+        function triggerTop1(rank, kills, testRankPts = null) {
+            if (rank === 1) {
+                const animBox = document.getElementById('top1-animation');
+                const text = animBox.querySelector('.chicken-dinner');
+                animBox.style.display = 'flex';
+                text.classList.add('show');
+                setTimeout(() => {
+                    animBox.style.display = 'none';
+                    text.classList.remove('show');
+                    showStats(rank, kills, testRankPts);
+                }, 4000);
+            } else {
+                showStats(rank, kills, testRankPts);
+            }
+        }
+
+        function showStats(rank, kills, testRankPts) {
+            document.getElementById('game-container').classList.remove('active');
+            document.getElementById('match-stats').classList.add('active');
+
+            let rankPts = testRankPts !== null ? testRankPts : calculateRankPoints(rank, kills);
+            let gunPts = calculateGunPoints(rank, kills);
+
+            tempMatchResult = { rankPoints: rankPts, kills: kills, gunPoints: gunPts, rank: rank };
+
+            document.getElementById('stat-top').innerText = rank;
+            document.getElementById('stat-kills').innerText = kills;
+            document.getElementById('stat-rank-pts').innerText = (rankPts > 0 ? "+" : "") + rankPts;
+            document.getElementById('stat-rank-pts').style.color = rankPts < 0 ? "#ef4444" : "#4ade80";
+            document.getElementById('stat-gun-pts').innerText = "+" + gunPts;
+        }
+
+        function backToLobbyAndSave() {
+            let myData = playersData.find(p => p.id === "me");
+            let oldPoints = myData.rankPoints;
+            let oldRankInfo = getRankData(oldPoints);
+
+            myData.rankPoints += tempMatchResult.rankPoints;
+            if (myData.rankPoints < 0) myData.rankPoints = 0; 
+            if (myData.rankPoints > 1000000) myData.rankPoints = 1000000;
+
+            myData.kills += tempMatchResult.kills;
+            myData.gunPoints += tempMatchResult.gunPoints;
+            myData.matches += 1;
+            if (tempMatchResult.rank === 1) myData.top1 += 1;
+
+            saveData();
+            renderLeaderboards();
+
+            let newRankInfo = getRankData(myData.rankPoints);
+
+            document.getElementById('match-stats').classList.remove('active');
+            
+            if (newRankInfo.tierLvl > oldRankInfo.tierLvl || (newRankInfo.min > oldRankInfo.min && tempMatchResult.rankPoints > 0)) {
+                triggerRankUpScreen(newRankInfo, oldPoints);
+            } else {
+                document.getElementById('lobby-container').classList.add('active');
+                updateMyStatsUI(oldPoints);
+            }
+            
+            let zone = document.getElementById('blue-zone');
+            zone.style.display = 'none'; zone.classList.remove('shrinking');
+        }
+
+        function triggerRankUpScreen(rankInfo, oldPoints) {
+            let overlay = document.getElementById('rank-up-overlay');
+            let badge = document.getElementById('overlay-rank-badge');
+            let nameText = document.getElementById('overlay-rank-name');
+
+            badge.className = `rank-shield rank-up-anim ${rankInfo.css}`;
+            badge.innerHTML = `<span>${rankInfo.short}</span>`;
+            nameText.innerText = rankInfo.name;
+            
+            setTimeout(() => {
+                nameText.style.color = window.getComputedStyle(badge).boxShadow.split(')')[0] + ')'; 
+            }, 20);
+
+            overlay.setAttribute('data-old-pts', oldPoints);
+            overlay.style.display = 'flex';
+        }
+
+        function closeRankUp() {
+            let overlay = document.getElementById('rank-up-overlay');
+            let oldPoints = parseInt(overlay.getAttribute('data-old-pts'));
+            overlay.style.display = 'none';
+            
+            document.getElementById('lobby-container').classList.add('active');
+            updateMyStatsUI(oldPoints); 
+        }
+
+        // Chạy lúc vào web
+        loadData();
+    </script>
 </body>
 </html>
