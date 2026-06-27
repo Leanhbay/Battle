@@ -42,7 +42,6 @@ const noiseManager = new NoiseManager();
 const sfx = new SoundManager();
 const particleManager = new ParticleManager();
 
-// TỐI ƯU HIỆU NĂNG: Truy vấn DOM 1 lần thay vì gọi liên tục trong vòng lặp Update
 const grenadeBtn = document.getElementById('btn-use-grenade');
 
 window.spawnBlood = function(x, y, dx, dy) { particleManager.addBlood(x, y, dx, dy); };
@@ -55,39 +54,44 @@ let zombies = [
 let bullets = [];
 let itemsOnGround = [];
 
+function pushItem(itemObj) {
+    itemObj.uid = Math.random().toString(36).substring(2, 12);
+    itemsOnGround.push(itemObj);
+}
+
 function spawnRandomLoot() {
     const safeRandom = (min, max) => Math.floor(Math.random() * (max - min)) + min;
     const addCluster = (cx, cy) => {
         const weapons = ['m4a1', 'scar', 'akm', 'famas', 'p90', 'uzi', 'glock', 'shotgun', 'melee'];
         const w = weapons[Math.floor(Math.random() * weapons.length)];
         let wName = w === 'melee' ? 'Mã Tấu' : (w==='m4a1'?'Súng M4A1':w==='scar'?'Súng SCAR':w==='akm'?'Súng AKM':w==='famas'?'Súng Famas':w==='p90'?'Súng P90':w==='uzi'?'Súng Uzi':w==='shotgun'?'Súng Shotgun':'Súng Glock');
-        itemsOnGround.push(new Item(wName, cx, cy, '#333', 'weapon', w));
+        pushItem(new Item(wName, cx, cy, '#333', 'weapon', w));
 
         if (['m4a1', 'scar', 'famas'].includes(w)) {
-            for(let i=0; i<Math.floor(Math.random()*3)+1; i++) itemsOnGround.push(new Item('Đạn 5.56mm', cx+Math.random()*2-1, cy+Math.random()*2-1, '#556b2f', 'ammo', 30));
+            for(let i=0; i<Math.floor(Math.random()*3)+1; i++) pushItem(new Item('Đạn 5.56mm', cx+Math.random()*2-1, cy+Math.random()*2-1, '#556b2f', 'ammo', 30));
         } else if (['akm'].includes(w)) {
-            for(let i=0; i<Math.floor(Math.random()*3)+1; i++) itemsOnGround.push(new Item('Đạn 7.62mm', cx+Math.random()*2-1, cy+Math.random()*2-1, '#7b241c', 'ammo', 30));
+            for(let i=0; i<Math.floor(Math.random()*3)+1; i++) pushItem(new Item('Đạn 7.62mm', cx+Math.random()*2-1, cy+Math.random()*2-1, '#7b241c', 'ammo', 30));
         } else if (['p90'].includes(w)) {
-            for(let i=0; i<Math.floor(Math.random()*2)+1; i++) itemsOnGround.push(new Item('Đạn 9mm', cx+Math.random()*2-1, cy+Math.random()*2-1, '#e67e22', 'ammo', 50));
+            for(let i=0; i<Math.floor(Math.random()*2)+1; i++) pushItem(new Item('Đạn 9mm', cx+Math.random()*2-1, cy+Math.random()*2-1, '#e67e22', 'ammo', 50));
         } else if (['uzi'].includes(w)) {
-            for(let i=0; i<Math.floor(Math.random()*3)+1; i++) itemsOnGround.push(new Item('Đạn 9mm', cx+Math.random()*2-1, cy+Math.random()*2-1, '#e67e22', 'ammo', 32));
+            for(let i=0; i<Math.floor(Math.random()*3)+1; i++) pushItem(new Item('Đạn 9mm', cx+Math.random()*2-1, cy+Math.random()*2-1, '#e67e22', 'ammo', 32));
         } else if (['shotgun'].includes(w)) {
-            for(let i=0; i<Math.floor(Math.random()*3)+1; i++) itemsOnGround.push(new Item('Đạn 12.0mm', cx+Math.random()*2-1, cy+Math.random()*2-1, '#e74c3c', 'ammo', 8));
+            for(let i=0; i<Math.floor(Math.random()*3)+1; i++) pushItem(new Item('Đạn 12.0mm', cx+Math.random()*2-1, cy+Math.random()*2-1, '#e74c3c', 'ammo', 8));
         } else if (['glock'].includes(w)) {
-            for(let i=0; i<Math.floor(Math.random()*3)+1; i++) itemsOnGround.push(new Item('Đạn 9.19mm', cx+Math.random()*2-1, cy+Math.random()*2-1, '#3498db', 'ammo', 17));
+            for(let i=0; i<Math.floor(Math.random()*3)+1; i++) pushItem(new Item('Đạn 9.19mm', cx+Math.random()*2-1, cy+Math.random()*2-1, '#3498db', 'ammo', 17));
         }
 
-        if (Math.random() > 0.4) itemsOnGround.push(new Item('Túi Cứu Thương', cx+Math.random()*2-1, cy+Math.random()*2-1, '#d32f2f', 'heal', 30));
-        if (Math.random() > 0.4) itemsOnGround.push(new Item('Chai Nước', cx+Math.random()*2-1, cy+Math.random()*2-1, '#3498db', 'water', 40));
-        if (Math.random() > 0.8) itemsOnGround.push(new Item('Lựu Đạn', cx+Math.random()*2-1, cy+Math.random()*2-1, '#2ecc71', 'throwable', 1));
+        if (Math.random() > 0.4) pushItem(new Item('Túi Cứu Thương', cx+Math.random()*2-1, cy+Math.random()*2-1, '#d32f2f', 'heal', 30));
+        if (Math.random() > 0.4) pushItem(new Item('Chai Nước', cx+Math.random()*2-1, cy+Math.random()*2-1, '#3498db', 'water', 40));
+        if (Math.random() > 0.8) pushItem(new Item('Lựu Đạn', cx+Math.random()*2-1, cy+Math.random()*2-1, '#2ecc71', 'throwable', 1));
     };
 
     for(let i=0; i<150; i++) {
         addCluster(safeRandom(10, 390), safeRandom(10, 390));
     }
     addCluster(12, 14); addCluster(8, 16);
-    itemsOnGround.push(new Item('Súng Shotgun', 11, 16, '#333', 'weapon', 'shotgun'));
-    itemsOnGround.push(new Item('Đạn 12.0mm', 11.5, 16.5, '#e74c3c', 'ammo', 8));
+    pushItem(new Item('Súng Shotgun', 11, 16, '#333', 'weapon', 'shotgun'));
+    pushItem(new Item('Đạn 12.0mm', 11.5, 16.5, '#e74c3c', 'ammo', 8));
 }
 spawnRandomLoot();
 
@@ -104,7 +108,6 @@ if (lootMenu) {
             e.preventDefault(); 
             e.stopPropagation(); 
             
-            // Lấy ID tự động thay vì so sánh tọa độ số thập phân
             const itemUid = target.getAttribute('data-uid');
             const idx = itemsOnGround.findIndex(i => i.uid === itemUid);
             
@@ -129,10 +132,19 @@ if (lootMenu) {
 
                     if (weaponToDrop) {
                         player.unlockedWeapons = player.unlockedWeapons.filter(w => w !== weaponToDrop);
-                        let dropName = weaponToDrop === 'm4a1' ? 'Súng M4A1' : (weaponToDrop==='scar'?'Súng SCAR':weaponToDrop==='akm'?'Súng AKM':weaponToDrop==='famas'?'Súng Famas':weaponToDrop==='shotgun'?'Súng Shotgun':weaponToDrop==='p90'?'Súng P90':weaponToDrop==='uzi'?'Súng Uzi':'Súng Glock');
+                        let dropName = '';
+                        switch(weaponToDrop) {
+                            case 'm4a1': dropName = 'Súng M4A1'; break;
+                            case 'scar': dropName = 'Súng SCAR'; break;
+                            case 'akm': dropName = 'Súng AKM'; break;
+                            case 'famas': dropName = 'Súng Famas'; break;
+                            case 'shotgun': dropName = 'Súng Shotgun'; break;
+                            case 'p90': dropName = 'Súng P90'; break;
+                            case 'uzi': dropName = 'Súng Uzi'; break;
+                            case 'glock': dropName = 'Súng Glock'; break;
+                        }
                         let droppedWep = new Item(dropName, player.gridX, player.gridY, '#333', 'weapon', weaponToDrop);
-                        droppedWep.uid = Math.random().toString(36).substr(2, 9); // Gán ID ngay khi vứt đồ
-                        itemsOnGround.push(droppedWep);
+                        pushItem(droppedWep);
                     }
 
                     if (!player.unlockedWeapons.includes(itm.value)) {
@@ -150,15 +162,16 @@ if (lootMenu) {
             }
         }
     };
-    // SỬA LỖI DOUBLE-FIRE: Gộp touchstart và mousedown thành pointerdown
     lootMenu.addEventListener('pointerdown', handleLoot, {passive: false});
 }
 
 function update(deltaTime) {
-    player.update(deltaTime, input, gameMap);
-    timeCycle.update(deltaTime);
-    noiseManager.update(deltaTime);
-    particleManager.update(deltaTime);
+    const safeDelta = Math.min(deltaTime, 0.05);
+
+    player.update(safeDelta, input, gameMap);
+    timeCycle.update(safeDelta);
+    noiseManager.update(safeDelta);
+    particleManager.update(safeDelta);
 
     if (grenadeBtn) {
         const hasGrenade = player.inventory.items.some(i => i.name === 'Lựu Đạn');
@@ -260,10 +273,10 @@ function update(deltaTime) {
                                 zombie.takeDamage(30); window.spawnBlood(zombie.gridX, zombie.gridY, player.facingX, player.facingY);
                                 if (zombie.health <= 0) {
                                     const rng = Math.random();
-                                    if (rng < 0.2) itemsOnGround.push(new Item('Đạn 5.56mm', zombie.gridX, zombie.gridY, '#556b2f', 'ammo', 30));
-                                    else if (rng < 0.3) itemsOnGround.push(new Item('Đạn 7.62mm', zombie.gridX, zombie.gridY, '#7b241c', 'ammo', 30));
-                                    else if (rng < 0.4) itemsOnGround.push(new Item('Đạn 9mm', zombie.gridX, zombie.gridY, '#e67e22', 'ammo', 32));
-                                    else if (rng < 0.5) itemsOnGround.push(new Item('Túi Cứu Thương', zombie.gridX, zombie.gridY, '#d32f2f', 'heal', 30));
+                                    if (rng < 0.2) pushItem(new Item('Đạn 5.56mm', zombie.gridX, zombie.gridY, '#556b2f', 'ammo', 30));
+                                    else if (rng < 0.3) pushItem(new Item('Đạn 7.62mm', zombie.gridX, zombie.gridY, '#7b241c', 'ammo', 30));
+                                    else if (rng < 0.4) pushItem(new Item('Đạn 9mm', zombie.gridX, zombie.gridY, '#e67e22', 'ammo', 32));
+                                    else if (rng < 0.5) pushItem(new Item('Túi Cứu Thương', zombie.gridX, zombie.gridY, '#d32f2f', 'heal', 30));
                                 }
                             }
                         }
@@ -276,30 +289,53 @@ function update(deltaTime) {
 
     bullets.forEach(bullet => {
         if (bullet.type === 'bullet') {
-            bullet.update(deltaTime, gameMap);
+            bullet.update(safeDelta, gameMap);
             zombies.forEach(zombie => {
                 if (bullet.active && zombie.health > 0) {
                     const dx = bullet.gridX - zombie.gridX; const dy = bullet.gridY - zombie.gridY;
                     if (Math.sqrt(dx * dx + dy * dy) < 0.5) {
                         zombie.takeDamage(bullet.damage); bullet.active = false;
                         window.spawnBlood(zombie.gridX, zombie.gridY, bullet.dirX, bullet.dirY);
+                        
+                        if ((bullet.distanceTraveled || 0) <= 3.0) {
+                            zombie.kbX = bullet.dirX * 6;  
+                            zombie.kbY = bullet.dirY * 6;
+                            zombie.kbTimer = 0.15;         
+                        }
+
                         if (zombie.health <= 0) {
                             const rng = Math.random();
-                            if (rng < 0.2) itemsOnGround.push(new Item('Đạn 5.56mm', zombie.gridX, zombie.gridY, '#556b2f', 'ammo', 30));
-                            else if (rng < 0.3) itemsOnGround.push(new Item('Đạn 7.62mm', zombie.gridX, zombie.gridY, '#7b241c', 'ammo', 30));
-                            else if (rng < 0.4) itemsOnGround.push(new Item('Đạn 9mm', zombie.gridX, zombie.gridY, '#e67e22', 'ammo', 32));
-                            else if (rng < 0.5) itemsOnGround.push(new Item('Túi Cứu Thương', zombie.gridX, zombie.gridY, '#d32f2f', 'heal', 30));
+                            if (rng < 0.2) pushItem(new Item('Đạn 5.56mm', zombie.gridX, zombie.gridY, '#556b2f', 'ammo', 30));
+                            else if (rng < 0.3) pushItem(new Item('Đạn 7.62mm', zombie.gridX, zombie.gridY, '#7b241c', 'ammo', 30));
+                            else if (rng < 0.4) pushItem(new Item('Đạn 9mm', zombie.gridX, zombie.gridY, '#e67e22', 'ammo', 32));
+                            else if (rng < 0.5) pushItem(new Item('Túi Cứu Thương', zombie.gridX, zombie.gridY, '#d32f2f', 'heal', 30));
                         }
                     }
                 }
             });
         } 
         else if (bullet.type === 'grenade_proj') {
-            bullet.update(deltaTime, gameMap, noiseManager, zombies, player, particleManager);
+            bullet.update(safeDelta, gameMap, noiseManager, zombies, player, particleManager);
         }
     });
 
-    zombies.forEach(zombie => zombie.update(deltaTime, player, gameMap, noiseManager, timeCycle));
+    zombies.forEach(zombie => {
+        if (zombie.kbTimer > 0) {
+            zombie.kbTimer -= safeDelta;
+            let nextX = zombie.gridX + zombie.kbX * safeDelta;
+            let nextY = zombie.gridY + zombie.kbY * safeDelta;
+            if (!gameMap.isSolid(nextX, zombie.gridY)) zombie.gridX = nextX;
+            if (!gameMap.isSolid(zombie.gridX, nextY)) zombie.gridY = nextY;
+        } else {
+            // FIX LỖI ĐỨNG HÌNH: Bọc try-catch để ngăn chặn Exception đánh sập Game Loop khi thiếu hàm (như takeDamage)
+            try {
+                zombie.update(safeDelta, player, gameMap, noiseManager, timeCycle);
+            } catch (err) {
+                console.warn("Lỗi đồng bộ trạng thái Zombie, bỏ qua frame: ", err);
+            }
+        }
+    });
+    
     bullets = bullets.filter(b => b.active); zombies = zombies.filter(z => z.health > 0);
     camera.follow(player, TILE_WIDTH, TILE_HEIGHT, gridToScreen);
 }
@@ -330,31 +366,32 @@ function render() {
 
     ctx.lineWidth = 0.5; 
 
-    for (let row = minRow; row <= maxRow; row++) {
-        for (let col = minCol; col <= maxCol; col++) {
-            const pos = gridToScreen(col, row, TILE_WIDTH, TILE_HEIGHT, camX, camY);
-            if (pos.x < -TILE_WIDTH || pos.x > canvas.width + TILE_WIDTH || pos.y < -TILE_HEIGHT || pos.y > canvas.height + TILE_HEIGHT) continue;
-            
-            const tileType = gameMap.getTile(col, row);
-            
-            const rx = Math.floor(pos.x);
-            const ry = Math.floor(pos.y);
+    for (let sum = minRow + minCol; sum <= maxRow + maxCol; sum++) {
+        for (let row = minRow; row <= maxRow; row++) {
+            let col = sum - row;
+            if (col >= minCol && col <= maxCol) {
+                const pos = gridToScreen(col, row, TILE_WIDTH, TILE_HEIGHT, camX, camY);
+                if (pos.x < -TILE_WIDTH * 2 || pos.x > canvas.width + TILE_WIDTH * 2 || pos.y < -TILE_HEIGHT * 4 || pos.y > canvas.height + TILE_HEIGHT * 4) continue;
+                
+                const tileType = gameMap.getTile(col, row);
+                const rx = Math.floor(pos.x);
+                const ry = Math.floor(pos.y);
 
-            ctx.beginPath(); 
-            ctx.moveTo(rx, ry); 
-            ctx.lineTo(rx + TILE_WIDTH / 2, ry + TILE_HEIGHT / 2);
-            ctx.lineTo(rx, ry + TILE_HEIGHT); 
-            ctx.lineTo(rx - TILE_WIDTH / 2, ry + TILE_HEIGHT / 2);
-            ctx.closePath(); 
-            
-            if (tileType === 3) ctx.fillStyle = '#1e3d59'; 
-            else if (tileType === 4) ctx.fillStyle = '#d4b872'; 
-            else ctx.fillStyle = Math.abs(row + col) % 2 === 0 ? '#2a3b2a' : '#314431'; 
-            
-            ctx.fill();
-            
-            ctx.strokeStyle = ctx.fillStyle; 
-            ctx.stroke();
+                ctx.beginPath(); 
+                ctx.moveTo(rx, ry - 0.5); 
+                ctx.lineTo(rx + TILE_WIDTH / 2 + 0.5, ry + TILE_HEIGHT / 2);
+                ctx.lineTo(rx, ry + TILE_HEIGHT + 0.5); 
+                ctx.lineTo(rx - TILE_WIDTH / 2 - 0.5, ry + TILE_HEIGHT / 2);
+                ctx.closePath(); 
+                
+                if (tileType === 3) ctx.fillStyle = '#1e3d59'; 
+                else if (tileType === 4) ctx.fillStyle = '#d4b872'; 
+                else ctx.fillStyle = Math.abs(row + col) % 2 === 0 ? '#2a3b2a' : '#314431'; 
+                
+                ctx.fill();
+                ctx.strokeStyle = ctx.fillStyle; 
+                ctx.stroke();
+            }
         }
     }
     
@@ -374,11 +411,9 @@ function render() {
             if (pos.x < -100 || pos.x > canvas.width + 100 || pos.y < -100 || pos.y > canvas.height + 100) return;
         }
 
-        if (ent.type === 'player' || ent.type === 'zombie') {
-            ctx.save(); ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; ctx.beginPath(); ctx.ellipse(Math.round(pos.x), Math.round(pos.y + TILE_HEIGHT / 2 - 2), 14, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-        }
-
         if (ent.type === 'player') {
+            ctx.save(); ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; ctx.beginPath(); ctx.ellipse(Math.round(pos.x), Math.round(pos.y + TILE_HEIGHT / 2 - 2), 14, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+            
             ctx.save(); if (ent.invulnerableTimer > 0 && Math.floor(ent.invulnerableTimer * 10) % 2 === 0) ctx.globalAlpha = 0.4;
             const screenFacingX = (ent.facingX - ent.facingY) * (TILE_WIDTH / 2); const screenFacingY = (ent.facingX + ent.facingY) * (TILE_HEIGHT / 2);
             let screenAngle = Math.atan2(screenFacingY, screenFacingX); let deg = screenAngle * (180 / Math.PI);
@@ -514,12 +549,43 @@ function render() {
             ctx.restore();
         }
         else if (ent.type === 'zombie') {
-            // SỬA LỖI CHÍ MẠNG Ở ĐÂY: Thêm 1 lần ctx.save() để bắt cặp với ctx.restore() bên dưới
-            ctx.save(); ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; ctx.beginPath(); ctx.ellipse(Math.round(pos.x), Math.round(pos.y + TILE_HEIGHT / 2 - 2), 14, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+            // RENDER ZOMBIE: Bọc bóng tối (Shadow)
             ctx.save(); 
-            ctx.imageSmoothingEnabled = false; const currentSprite = ent.sprites[ent.currentState];
-            if (ent.facingX < 0) { ctx.translate(Math.round(pos.x), Math.round(pos.y + TILE_HEIGHT / 2 - ent.height)); ctx.scale(-1, 1); ctx.drawImage(currentSprite, Math.round(-ent.width / 2), 0, ent.width, ent.height); } 
-            else { ctx.drawImage(currentSprite, Math.round(pos.x - ent.width / 2), Math.round(pos.y + TILE_HEIGHT / 2 - ent.height), ent.width, ent.height); }
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; ctx.beginPath(); ctx.ellipse(Math.round(pos.x), Math.round(pos.y + TILE_HEIGHT / 2 - 2), 14, 6, 0, 0, Math.PI * 2); ctx.fill(); 
+            ctx.restore();
+            
+            // RENDER ZOMBIE: Thân thể với cơ chế bảo vệ Try Catch khắt khe
+            ctx.save(); 
+            if (ent.kbTimer > 0) ctx.globalAlpha = 0.7; 
+            ctx.imageSmoothingEnabled = false; 
+
+            try {
+                let currentSprite = null;
+                // Nếu Zombie có hệ thống sprite khai báo chuẩn, cố gắng lấy hoạt ảnh
+                if (ent.sprites) {
+                    currentSprite = ent.sprites[ent.currentState] || ent.sprites['walk1'] || ent.sprites['idle'];
+                }
+                currentSprite = currentSprite || ent.sprite; // Fallback dự phòng cuối cùng
+                
+                // Kiểm tra loại object: Phải là Image hoặc Canvas hợp lệ mới được nhét vào hàm vẽ
+                if (currentSprite && (currentSprite instanceof HTMLCanvasElement || currentSprite instanceof HTMLImageElement)) {
+                    if (ent.facingX < 0) { 
+                        ctx.translate(Math.round(pos.x), Math.round(pos.y + TILE_HEIGHT / 2 - ent.height)); 
+                        ctx.scale(-1, 1); 
+                        ctx.drawImage(currentSprite, Math.round(-ent.width / 2), 0, ent.width, ent.height); 
+                    } else { 
+                        ctx.drawImage(currentSprite, Math.round(pos.x - ent.width / 2), Math.round(pos.y + TILE_HEIGHT / 2 - ent.height), ent.width, ent.height); 
+                    }
+                } else {
+                    // Nếu lỗi file ảnh, vẽ thế thân thành một khối hộp đỏ để game không bao giờ sập
+                    ctx.fillStyle = '#cc0000';
+                    ctx.fillRect(Math.round(pos.x - ent.width/2), Math.round(pos.y + TILE_HEIGHT / 2 - ent.height), ent.width, ent.height);
+                }
+            } catch (err) {
+                // Game sẽ bỏ qua lỗi vẽ và vẫn tiếp tục vòng lặp 60 FPS
+                console.warn("Lỗi vẽ Zombie (Đã bỏ qua để game chạy tiếp):", err);
+            }
+            
             ctx.restore();
         }
         else if (ent.type === 'bullet') {
@@ -545,9 +611,8 @@ function render() {
             lootMenu.style.display = 'block';
             let contentHtml = '';
             nearbyItems.forEach(ni => { 
-                // Tự động gán Unique ID nếu vật phẩm đó chưa có
                 if (!ni.item.uid) ni.item.uid = Math.random().toString(36).substr(2, 9);
-                contentHtml += `<div class="loot-item" data-uid="${ni.item.uid}" style="display: flex; align-items: center; gap: 8px;"><img src="${ni.item.iconUrl}" style="width: 20px; height: 20px; image-rendering: pixelated;"><span>${ni.item.name}</span></div>`; 
+                contentHtml += `<div class="loot-item" data-uid="${ni.item.uid}"><img src="${ni.item.iconUrl}" style="width: 20px; height: 20px; image-rendering: pixelated;"><span>${ni.item.name}</span></div>`; 
             });
             if (lootMenu.getAttribute('data-content') !== contentHtml) {
                 lootMenu.innerHTML = contentHtml;
