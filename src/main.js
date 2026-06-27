@@ -42,7 +42,47 @@ const noiseManager = new NoiseManager();
 const sfx = new SoundManager();
 const particleManager = new ParticleManager();
 
+// TỐI ƯU HIỆU NĂNG: Truy vấn DOM 1 lần thay vì gọi liên tục trong vòng lặp Update
 const grenadeBtn = document.getElementById('btn-use-grenade');
+const lootMenu = document.getElementById('proximity-loot');
+
+// TÍNH NĂNG MỚI: Tự động tạo và nhét Nút Thay Đạn + Nút Ngắm vào khay hành động Mobile
+setTimeout(() => {
+    const actionControls = document.getElementById('action-controls');
+    if (actionControls) {
+        // 1. Thêm nút Ngắm bắn (Scope ADS) nếu chưa có
+        if (!document.getElementById('btn-scope')) {
+            const scopeBtn = document.createElement('div');
+            scopeBtn.id = 'btn-scope'; scopeBtn.className = 'd-btn';
+            scopeBtn.style.backgroundColor = 'rgba(41, 128, 185, 0.4)'; scopeBtn.style.borderColor = '#2980b9';
+            scopeBtn.style.width = '60px'; scopeBtn.style.height = '60px'; scopeBtn.style.borderRadius = '50%';
+            scopeBtn.style.display = 'flex'; scopeBtn.style.alignItems = 'center'; scopeBtn.style.justifyContent = 'center';
+            scopeBtn.style.boxShadow = '0 4px 6px rgba(0,0,0,0.3)';
+            scopeBtn.innerHTML = `<svg viewBox="0 0 24 24" style="width:55%; height:55%; fill:none; stroke:white; stroke-width:2;"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg>`;
+            actionControls.appendChild(scopeBtn);
+            scopeBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); player.isAiming = !player.isAiming; sfx.play('pickup'); });
+        }
+
+        // 2. TÍNH NĂNG MỚI: Thêm Nút Thay Đạn (Reload) cho Mobile (Màu vàng cam có vòng xoay)
+        if (!document.getElementById('btn-reload')) {
+            const reloadBtn = document.createElement('div');
+            reloadBtn.id = 'btn-reload'; reloadBtn.className = 'd-btn';
+            reloadBtn.style.backgroundColor = 'rgba(243, 156, 18, 0.4)'; reloadBtn.style.borderColor = '#f39c12';
+            reloadBtn.style.width = '60px'; reloadBtn.style.height = '60px'; reloadBtn.style.borderRadius = '50%';
+            reloadBtn.style.display = 'flex'; reloadBtn.style.alignItems = 'center'; reloadBtn.style.justifyContent = 'center';
+            reloadBtn.style.boxShadow = '0 4px 6px rgba(0,0,0,0.3)';
+            reloadBtn.innerHTML = `<svg viewBox="0 0 24 24" style="width:55%; height:55%; fill:none; stroke:white; stroke-width:2.5; stroke-linecap:round;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>`;
+            actionControls.appendChild(reloadBtn);
+            reloadBtn.addEventListener('pointerdown', (e) => { 
+                e.preventDefault(); e.stopPropagation(); 
+                if (!player.isReloading) { player.startReload(); }
+            });
+        }
+    }
+}, 100);
+
+// Click chuột phải trên PC để bật ngắm
+window.addEventListener('mousedown', (e) => { if (e.button === 2) { player.isAiming = !player.isAiming; sfx.play('pickup'); } });
 
 window.spawnBlood = function(x, y, dx, dy) { particleManager.addBlood(x, y, dx, dy); };
 
@@ -71,10 +111,8 @@ function spawnRandomLoot() {
             for(let i=0; i<Math.floor(Math.random()*3)+1; i++) pushItem(new Item('Đạn 5.56mm', cx+Math.random()*2-1, cy+Math.random()*2-1, '#556b2f', 'ammo', 30));
         } else if (['akm'].includes(w)) {
             for(let i=0; i<Math.floor(Math.random()*3)+1; i++) pushItem(new Item('Đạn 7.62mm', cx+Math.random()*2-1, cy+Math.random()*2-1, '#7b241c', 'ammo', 30));
-        } else if (['p90'].includes(w)) {
-            for(let i=0; i<Math.floor(Math.random()*2)+1; i++) pushItem(new Item('Đạn 9mm', cx+Math.random()*2-1, cy+Math.random()*2-1, '#e67e22', 'ammo', 50));
-        } else if (['uzi'].includes(w)) {
-            for(let i=0; i<Math.floor(Math.random()*3)+1; i++) pushItem(new Item('Đạn 9mm', cx+Math.random()*2-1, cy+Math.random()*2-1, '#e67e22', 'ammo', 32));
+        } else if (['p90', 'uzi'].includes(w)) {
+            for(let i=0; i<Math.floor(Math.random()*2)+1; i++) pushItem(new Item('Đạn 9mm', cx+Math.random()*2-1, cy+Math.random()*2-1, '#e67e22', 'ammo', 32));
         } else if (['shotgun'].includes(w)) {
             for(let i=0; i<Math.floor(Math.random()*3)+1; i++) pushItem(new Item('Đạn 12.0mm', cx+Math.random()*2-1, cy+Math.random()*2-1, '#e74c3c', 'ammo', 8));
         } else if (['glock'].includes(w)) {
@@ -86,9 +124,7 @@ function spawnRandomLoot() {
         if (Math.random() > 0.8) pushItem(new Item('Lựu Đạn', cx+Math.random()*2-1, cy+Math.random()*2-1, '#2ecc71', 'throwable', 1));
     };
 
-    for(let i=0; i<150; i++) {
-        addCluster(safeRandom(10, 390), safeRandom(10, 390));
-    }
+    for(let i=0; i<150; i++) { addCluster(safeRandom(10, 390), safeRandom(10, 390)); }
     addCluster(12, 14); addCluster(8, 16);
     pushItem(new Item('Súng Shotgun', 11, 16, '#333', 'weapon', 'shotgun'));
     pushItem(new Item('Đạn 12.0mm', 11.5, 16.5, '#e74c3c', 'ammo', 8));
@@ -100,14 +136,11 @@ let spentMags = [];
 const allGuns = ['m4a1', 'scar', 'akm', 'famas', 'p90', 'uzi', 'shotgun', 'glock'];
 const isGun = (val) => allGuns.includes(val);
 
-const lootMenu = document.getElementById('proximity-loot');
 if (lootMenu) {
     const handleLoot = (e) => {
         const target = e.target.closest('.loot-item');
         if (target && player.health > 0) {
-            e.preventDefault(); 
-            e.stopPropagation(); 
-            
+            e.preventDefault(); e.stopPropagation(); 
             const itemUid = target.getAttribute('data-uid');
             const idx = itemsOnGround.findIndex(i => i.uid === itemUid);
             
@@ -119,45 +152,22 @@ if (lootMenu) {
                     if (itm.name === 'Đạn 12.0mm') player.reserveAmmo['12.0mm'] += itm.value;
                     if (itm.name === 'Đạn 9mm') player.reserveAmmo['9mm'] += itm.value;
                     if (itm.name === 'Đạn 9.19mm') player.reserveAmmo['9.19mm'] += itm.value;
-                    
                     itemsOnGround.splice(idx, 1); player.startInteract(0.3); sfx.play('pickup');
                 } else if (itm.itemType === 'weapon') {
                     let gunCount = player.unlockedWeapons.filter(w => isGun(w)).length;
                     let weaponToDrop = null;
-                    
                     if (!player.unlockedWeapons.includes(itm.value) && gunCount >= 2) {
-                        if (isGun(player.weapon)) weaponToDrop = player.weapon; 
-                        else weaponToDrop = player.unlockedWeapons.find(w => isGun(w)); 
+                        if (isGun(player.weapon)) weaponToDrop = player.weapon; else weaponToDrop = player.unlockedWeapons.find(w => isGun(w)); 
                     }
-
                     if (weaponToDrop) {
                         player.unlockedWeapons = player.unlockedWeapons.filter(w => w !== weaponToDrop);
-                        let dropName = '';
-                        switch(weaponToDrop) {
-                            case 'm4a1': dropName = 'Súng M4A1'; break;
-                            case 'scar': dropName = 'Súng SCAR'; break;
-                            case 'akm': dropName = 'Súng AKM'; break;
-                            case 'famas': dropName = 'Súng Famas'; break;
-                            case 'shotgun': dropName = 'Súng Shotgun'; break;
-                            case 'p90': dropName = 'Súng P90'; break;
-                            case 'uzi': dropName = 'Súng Uzi'; break;
-                            case 'glock': dropName = 'Súng Glock'; break;
-                        }
-                        let droppedWep = new Item(dropName, player.gridX, player.gridY, '#333', 'weapon', weaponToDrop);
-                        pushItem(droppedWep);
+                        let dropName = weaponToDrop === 'm4a1' ? 'Súng M4A1' : (weaponToDrop==='scar'?'Súng SCAR':weaponToDrop==='akm'?'Súng AKM':weaponToDrop==='famas'?'Súng Famas':weaponToDrop==='shotgun'?'Súng Shotgun':weaponToDrop==='p90'?'Súng P90':weaponToDrop==='uzi'?'Súng Uzi':'Súng Glock');
+                        pushItem(new Item(dropName, player.gridX, player.gridY, '#333', 'weapon', weaponToDrop));
                     }
-
-                    if (!player.unlockedWeapons.includes(itm.value)) {
-                        player.unlockedWeapons.push(itm.value);
-                    }
-                    player.weapon = itm.value;
-                    itemsOnGround.splice(idx, 1);
-                    player.startInteract(0.3); sfx.play('pickup');
-
+                    if (!player.unlockedWeapons.includes(itm.value)) player.unlockedWeapons.push(itm.value);
+                    player.weapon = itm.value; itemsOnGround.splice(idx, 1); player.startInteract(0.3); sfx.play('pickup');
                 } else {
-                    if (player.inventory.addItem(itm)) {
-                        itemsOnGround.splice(idx, 1); player.startInteract(0.3); sfx.play('pickup');
-                    }
+                    if (player.inventory.addItem(itm)) { itemsOnGround.splice(idx, 1); player.startInteract(0.3); sfx.play('pickup'); }
                 }
             }
         }
@@ -168,7 +178,34 @@ if (lootMenu) {
 function update(deltaTime) {
     const safeDelta = Math.min(deltaTime, 0.05);
 
+    const originalSpeed = player.speed;
+    if (player.isAiming) player.speed = 2.2; 
+    
+    // TÍNH NĂNG MỚI: Thay đổi logic trừ máu khát nước. 
+    // Trừ 0.2 máu mỗi khi trôi qua 5 phút thời gian trong game (5 phút game = 5 giây đời thực)
+    // Tương đương với tốc độ giảm: 0.04 máu mỗi giây thực.
+    if (player.health > 0) {
+        if (player.thirst <= 0) {
+            player.health -= safeDelta * 0.04; 
+            if (player.health < 0) player.health = 0;
+        }
+    }
+
     player.update(safeDelta, input, gameMap);
+    player.speed = originalSpeed; 
+
+    if (input.mouse.clicked || (!('ontouchstart' in window) && input.mouse.x > 0)) {
+        const pScreenForFacing = gridToScreen(player.gridX, player.gridY, TILE_WIDTH, TILE_HEIGHT, camera.offsetX, camera.offsetY);
+        const pCenterYForFacing = pScreenForFacing.y + TILE_HEIGHT / 2 - player.height / 2;
+        let dx = input.mouse.x - pScreenForFacing.x; let dy = input.mouse.y - pCenterYForFacing;
+        if (dx !== 0 || dy !== 0) {
+            let isoDx = (dx / (TILE_WIDTH / 2) + dy / (TILE_HEIGHT / 2)) / 2;
+            let isoDy = (dy / (TILE_HEIGHT / 2) - dx / (TILE_WIDTH / 2)) / 2;
+            let len = Math.sqrt(isoDx * isoDx + isoDy * isoDy);
+            if (len > 0) { player.facingX = isoDx / len; player.facingY = isoDy / len; }
+        }
+    }
+
     timeCycle.update(safeDelta);
     noiseManager.update(safeDelta);
     particleManager.update(safeDelta);
@@ -194,28 +231,19 @@ function update(deltaTime) {
 
     if (input.isPressed('use_heal') && player.actionCooldown <= 0 && player.health > 0) {
         const idx = player.inventory.items.findIndex(i => i.name === 'Túi Cứu Thương');
-        if (idx !== -1) {
-            const item = player.inventory.items[idx]; player.inventory.removeItem(idx);
-            item.use(player, bullets); sfx.play('pickup');
-        }
+        if (idx !== -1) { const item = player.inventory.items[idx]; player.inventory.removeItem(idx); item.use(player, bullets); sfx.play('pickup'); }
         player.actionCooldown = 0.3;
     }
 
     if (input.isPressed('use_water') && player.actionCooldown <= 0 && player.health > 0) {
         const idx = player.inventory.items.findIndex(i => i.name === 'Chai Nước');
-        if (idx !== -1) {
-            const item = player.inventory.items[idx]; player.inventory.removeItem(idx);
-            item.use(player, bullets); sfx.play('pickup');
-        }
+        if (idx !== -1) { const item = player.inventory.items[idx]; player.inventory.removeItem(idx); item.use(player, bullets); sfx.play('pickup'); }
         player.actionCooldown = 0.3;
     }
 
     if (input.isPressed('use_grenade') && player.actionCooldown <= 0 && player.health > 0) {
         const idx = player.inventory.items.findIndex(i => i.name === 'Lựu Đạn');
-        if (idx !== -1) {
-            const item = player.inventory.items[idx]; player.inventory.removeItem(idx);
-            item.use(player, bullets);
-        }
+        if (idx !== -1) { const item = player.inventory.items[idx]; player.inventory.removeItem(idx); item.use(player, bullets); }
         player.actionCooldown = 0.8;
     }
 
@@ -273,10 +301,10 @@ function update(deltaTime) {
                                 zombie.takeDamage(30); window.spawnBlood(zombie.gridX, zombie.gridY, player.facingX, player.facingY);
                                 if (zombie.health <= 0) {
                                     const rng = Math.random();
-                                    if (rng < 0.2) pushItem(new Item('Đạn 5.56mm', zombie.gridX, zombie.gridY, '#556b2f', 'ammo', 30));
-                                    else if (rng < 0.3) pushItem(new Item('Đạn 7.62mm', zombie.gridX, zombie.gridY, '#7b241c', 'ammo', 30));
-                                    else if (rng < 0.4) pushItem(new Item('Đạn 9mm', zombie.gridX, zombie.gridY, '#e67e22', 'ammo', 32));
-                                    else if (rng < 0.5) pushItem(new Item('Túi Cứu Thương', zombie.gridX, zombie.gridY, '#d32f2f', 'heal', 30));
+                                    if (rng < 0.2) itemsOnGround.push(new Item('Đạn 5.56mm', zombie.gridX, zombie.gridY, '#556b2f', 'ammo', 30));
+                                    else if (rng < 0.3) itemsOnGround.push(new Item('Đạn 7.62mm', zombie.gridX, zombie.gridY, '#7b241c', 'ammo', 30));
+                                    else if (rng < 0.4) itemsOnGround.push(new Item('Đạn 9mm', zombie.gridX, zombie.gridY, '#e67e22', 'ammo', 32));
+                                    else if (rng < 0.5) itemsOnGround.push(new Item('Túi Cứu Thương', zombie.gridX, zombie.gridY, '#d32f2f', 'heal', 30));
                                 }
                             }
                         }
@@ -296,43 +324,31 @@ function update(deltaTime) {
                     if (Math.sqrt(dx * dx + dy * dy) < 0.5) {
                         zombie.takeDamage(bullet.damage); bullet.active = false;
                         window.spawnBlood(zombie.gridX, zombie.gridY, bullet.dirX, bullet.dirY);
-                        
                         if ((bullet.distanceTraveled || 0) <= 3.0) {
-                            zombie.kbX = bullet.dirX * 6;  
-                            zombie.kbY = bullet.dirY * 6;
-                            zombie.kbTimer = 0.15;         
+                            zombie.kbX = bullet.dirX * 6; zombie.kbY = bullet.dirY * 6; zombie.kbTimer = 0.15;         
                         }
-
                         if (zombie.health <= 0) {
                             const rng = Math.random();
-                            if (rng < 0.2) pushItem(new Item('Đạn 5.56mm', zombie.gridX, zombie.gridY, '#556b2f', 'ammo', 30));
-                            else if (rng < 0.3) pushItem(new Item('Đạn 7.62mm', zombie.gridX, zombie.gridY, '#7b241c', 'ammo', 30));
-                            else if (rng < 0.4) pushItem(new Item('Đạn 9mm', zombie.gridX, zombie.gridY, '#e67e22', 'ammo', 32));
-                            else if (rng < 0.5) pushItem(new Item('Túi Cứu Thương', zombie.gridX, zombie.gridY, '#d32f2f', 'heal', 30));
+                            if (rng < 0.2) itemsOnGround.push(new Item('Đạn 5.56mm', zombie.gridX, zombie.gridY, '#556b2f', 'ammo', 30));
+                            else if (rng < 0.3) itemsOnGround.push(new Item('Đạn 7.62mm', zombie.gridX, zombie.gridY, '#7b241c', 'ammo', 30));
+                            else if (rng < 0.4) itemsOnGround.push(new Item('Đạn 9mm', zombie.gridX, zombie.gridY, '#e67e22', 'ammo', 32));
+                            else if (rng < 0.5) itemsOnGround.push(new Item('Túi Cứu Thương', zombie.gridX, zombie.gridY, '#d32f2f', 'heal', 30));
                         }
                     }
                 }
             });
         } 
-        else if (bullet.type === 'grenade_proj') {
-            bullet.update(safeDelta, gameMap, noiseManager, zombies, player, particleManager);
-        }
+        else if (bullet.type === 'grenade_proj') { bullet.update(safeDelta, gameMap, noiseManager, zombies, player, particleManager); }
     });
 
     zombies.forEach(zombie => {
         if (zombie.kbTimer > 0) {
             zombie.kbTimer -= safeDelta;
-            let nextX = zombie.gridX + zombie.kbX * safeDelta;
-            let nextY = zombie.gridY + zombie.kbY * safeDelta;
+            let nextX = zombie.gridX + zombie.kbX * safeDelta; let nextY = zombie.gridY + zombie.kbY * safeDelta;
             if (!gameMap.isSolid(nextX, zombie.gridY)) zombie.gridX = nextX;
             if (!gameMap.isSolid(zombie.gridX, nextY)) zombie.gridY = nextY;
         } else {
-            // FIX LỖI ĐỨNG HÌNH: Bọc try-catch để ngăn chặn Exception đánh sập Game Loop khi thiếu hàm (như takeDamage)
-            try {
-                zombie.update(safeDelta, player, gameMap, noiseManager, timeCycle);
-            } catch (err) {
-                console.warn("Lỗi đồng bộ trạng thái Zombie, bỏ qua frame: ", err);
-            }
+            try { zombie.update(safeDelta, player, gameMap, noiseManager, timeCycle); } catch (err) { console.warn("Lỗi đồng bộ trạng thái Zombie, bỏ qua frame: ", err); }
         }
     });
     
@@ -356,13 +372,9 @@ function render() {
     particleManager.particles.forEach(p => renderQueue.push({ entity: p, depth: p.x + p.y }));
 
     const viewRadius = 18; 
-    const pCol = Math.floor(player.gridX); 
-    const pRow = Math.floor(player.gridY);
-
-    const minRow = pRow - viewRadius;
-    const maxRow = pRow + viewRadius;
-    const minCol = pCol - viewRadius;
-    const maxCol = pCol + viewRadius;
+    const pCol = Math.floor(player.gridX); const pRow = Math.floor(player.gridY);
+    const minRow = pRow - viewRadius; const maxRow = pRow + viewRadius;
+    const minCol = pCol - viewRadius; const maxCol = pCol + viewRadius;
 
     ctx.lineWidth = 0.5; 
 
@@ -374,8 +386,7 @@ function render() {
                 if (pos.x < -TILE_WIDTH * 2 || pos.x > canvas.width + TILE_WIDTH * 2 || pos.y < -TILE_HEIGHT * 4 || pos.y > canvas.height + TILE_HEIGHT * 4) continue;
                 
                 const tileType = gameMap.getTile(col, row);
-                const rx = Math.floor(pos.x);
-                const ry = Math.floor(pos.y);
+                const rx = Math.floor(pos.x); const ry = Math.floor(pos.y);
 
                 ctx.beginPath(); 
                 ctx.moveTo(rx, ry - 0.5); 
@@ -398,7 +409,6 @@ function render() {
     particleManager.renderStains(ctx, gridToScreen, TILE_WIDTH, TILE_HEIGHT, camX, camY);
 
     renderQueue.sort((a, b) => a.depth - b.depth);
-    
     renderQueue.forEach(item => {
         const ent = item.entity; let pos;
         if (ent.type === 'blood') {
@@ -411,9 +421,11 @@ function render() {
             if (pos.x < -100 || pos.x > canvas.width + 100 || pos.y < -100 || pos.y > canvas.height + 100) return;
         }
 
-        if (ent.type === 'player') {
+        if (ent.type === 'player' || ent.type === 'zombie') {
             ctx.save(); ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; ctx.beginPath(); ctx.ellipse(Math.round(pos.x), Math.round(pos.y + TILE_HEIGHT / 2 - 2), 14, 6, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-            
+        }
+
+        if (ent.type === 'player') {
             ctx.save(); if (ent.invulnerableTimer > 0 && Math.floor(ent.invulnerableTimer * 10) % 2 === 0) ctx.globalAlpha = 0.4;
             const screenFacingX = (ent.facingX - ent.facingY) * (TILE_WIDTH / 2); const screenFacingY = (ent.facingX + ent.facingY) * (TILE_HEIGHT / 2);
             let screenAngle = Math.atan2(screenFacingY, screenFacingX); let deg = screenAngle * (180 / Math.PI);
@@ -450,7 +462,7 @@ function render() {
                     ctx.save(); if (dirStr === 'front') ctx.translate(flipX ? 4 : -4, -2); ctx.translate(-5, holsterOffset); ctx.rotate(-Math.PI / 4); const wData = ent.weaponData.p90; const wMag = ent.weaponData.p90_mag; ctx.drawImage(wData.img, Math.round(-wData.w / 2), Math.round(-wData.h / 2), wData.w, wData.h); ctx.drawImage(wMag.img, Math.round(-wData.w/2 + wData.magX), Math.round(-wData.h/2 + wData.magY)); ctx.restore(); holsterOffset += 5;
                 }
                 if (ent.unlockedWeapons.includes('uzi') && ent.weapon !== 'uzi') {
-                    ctx.save(); if (dirStr === 'front') ctx.translate(flipX ? 4 : -4, -2); ctx.translate(-5, holsterOffset); ctx.rotate(-Math.PI / 4); const wData = ent.weaponData.uzi; const wMag = ent.weaponData.uzi_mag; ctx.drawImage(wData.img, Math.round(-wData.w / 2), Math.round(-wData.h / 2), wData.w, wData.h); ctx.drawImage(wMag.img, Math.round(-wData.w/2 + wData.magX), Math.round(-wData.h/2 + wData.magY)); ctx.restore();
+                    ctx.save(); if (dirStr === 'front') ctx.translate(flipX ? 4 : -4, -2); ctx.translate(-5, holsterOffset); ctx.rotate(-Math.PI / 4); const wData = ent.weaponData.uzi; const wMag = ent.weaponData.uzi_mag; ctx.drawImage(wData.img, Math.round(-wData.w / 2), Math.round(-wData.h / 2), wData.w, wData.h); ctx.drawImage(wMag.img, Math.round(-wData.w/2 + wData.magX), Math.round(-wData.h/2 + wData.magY)); ctx.restore(); holsterOffset += 5;
                 }
                 if (ent.unlockedWeapons.includes('melee') && ent.weapon !== 'melee') {
                     ctx.save(); ctx.translate(flipX ? 4 : -6, 12); ctx.rotate(Math.PI / 2.5); const wData = ent.weaponData.melee; ctx.drawImage(wData.img, Math.round(-wData.w / 2), Math.round(-wData.h / 2), wData.w, wData.h); ctx.restore();
@@ -462,7 +474,11 @@ function render() {
 
             const drawActiveWeapon = () => {
                 if (ent.weapon === 'none' || ent.currentState === 'eat' || ent.health <= 0) return;
-                ctx.save(); ctx.imageSmoothingEnabled = false; ctx.translate(Math.round(pos.x + (flipX ? -2 : 2)), Math.round(pos.y + TILE_HEIGHT / 2 - ent.height + 20)); ctx.rotate(screenAngle); if (Math.abs(screenAngle) > Math.PI / 2) ctx.scale(1, -1); 
+                ctx.save(); ctx.imageSmoothingEnabled = false; 
+                const scopeYOffset = input.isPressed('use_grenade') || player.isAiming ? 9 : 20;
+
+                ctx.translate(Math.round(pos.x + (flipX ? -2 : 2)), Math.round(pos.y + TILE_HEIGHT / 2 - ent.height + scopeYOffset)); 
+                ctx.rotate(screenAngle); if (Math.abs(screenAngle) > Math.PI / 2) ctx.scale(1, -1); 
                 let swingAngle = 0; let kickbackX = 0; let magDropY = 0; let drawHandLeft = true;
 
                 if (ent.isReloading && ent.reloadTimer > 0) {
@@ -549,43 +565,23 @@ function render() {
             ctx.restore();
         }
         else if (ent.type === 'zombie') {
-            // RENDER ZOMBIE: Bọc bóng tối (Shadow)
             ctx.save(); 
             ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'; ctx.beginPath(); ctx.ellipse(Math.round(pos.x), Math.round(pos.y + TILE_HEIGHT / 2 - 2), 14, 6, 0, 0, Math.PI * 2); ctx.fill(); 
             ctx.restore();
             
-            // RENDER ZOMBIE: Thân thể với cơ chế bảo vệ Try Catch khắt khe
             ctx.save(); 
             if (ent.kbTimer > 0) ctx.globalAlpha = 0.7; 
-            ctx.imageSmoothingEnabled = false; 
 
-            try {
-                let currentSprite = null;
-                // Nếu Zombie có hệ thống sprite khai báo chuẩn, cố gắng lấy hoạt ảnh
-                if (ent.sprites) {
-                    currentSprite = ent.sprites[ent.currentState] || ent.sprites['walk1'] || ent.sprites['idle'];
-                }
-                currentSprite = currentSprite || ent.sprite; // Fallback dự phòng cuối cùng
-                
-                // Kiểm tra loại object: Phải là Image hoặc Canvas hợp lệ mới được nhét vào hàm vẽ
-                if (currentSprite && (currentSprite instanceof HTMLCanvasElement || currentSprite instanceof HTMLImageElement)) {
-                    if (ent.facingX < 0) { 
-                        ctx.translate(Math.round(pos.x), Math.round(pos.y + TILE_HEIGHT / 2 - ent.height)); 
-                        ctx.scale(-1, 1); 
-                        ctx.drawImage(currentSprite, Math.round(-ent.width / 2), 0, ent.width, ent.height); 
-                    } else { 
-                        ctx.drawImage(currentSprite, Math.round(pos.x - ent.width / 2), Math.round(pos.y + TILE_HEIGHT / 2 - ent.height), ent.width, ent.height); 
-                    }
-                } else {
-                    // Nếu lỗi file ảnh, vẽ thế thân thành một khối hộp đỏ để game không bao giờ sập
-                    ctx.fillStyle = '#cc0000';
-                    ctx.fillRect(Math.round(pos.x - ent.width/2), Math.round(pos.y + TILE_HEIGHT / 2 - ent.height), ent.width, ent.height);
-                }
-            } catch (err) {
-                // Game sẽ bỏ qua lỗi vẽ và vẫn tiếp tục vòng lặp 60 FPS
-                console.warn("Lỗi vẽ Zombie (Đã bỏ qua để game chạy tiếp):", err);
-            }
+            ctx.imageSmoothingEnabled = false; 
+            const currentSprite = ent.sprites ? (ent.sprites[ent.currentState] || ent.sprites['walk1'] || ent.sprites['idle'] || ent.sprite) : null;
             
+            if (currentSprite && (currentSprite instanceof HTMLCanvasElement || currentSprite instanceof HTMLImageElement)) {
+                if (ent.facingX < 0) { ctx.translate(Math.round(pos.x), Math.round(pos.y + TILE_HEIGHT / 2 - ent.height)); ctx.scale(-1, 1); ctx.drawImage(currentSprite, Math.round(-ent.width / 2), 0, ent.width, ent.height); } 
+                else { ctx.drawImage(currentSprite, Math.round(pos.x - ent.width / 2), Math.round(pos.y + TILE_HEIGHT / 2 - ent.height), ent.width, ent.height); }
+            } else {
+                ctx.fillStyle = '#cc0000';
+                ctx.fillRect(Math.round(pos.x - ent.width/2), Math.round(pos.y + TILE_HEIGHT / 2 - ent.height), ent.width, ent.height);
+            }
             ctx.restore();
         }
         else if (ent.type === 'bullet') {
@@ -599,6 +595,7 @@ function render() {
 
     const playerScreenPos = gridToScreen(player.gridX, player.gridY, TILE_WIDTH, TILE_HEIGHT, camX, camY);
     const lightCenterY = playerScreenPos.y + TILE_HEIGHT / 2 - player.height / 2;
+    particleManager.renderStains(ctx, gridToScreen, TILE_WIDTH, TILE_HEIGHT, camX, camY); 
     timeCycle.render(ctx, canvas.width, canvas.height, Math.round(playerScreenPos.x), Math.round(lightCenterY));
 
     if (lootMenu) {
@@ -626,15 +623,66 @@ function render() {
 
     if (player.health > 0 && input.mouse.x > 0 && input.mouse.y > 0) {
         ctx.save();
+        
+        const screenFacingX = (player.facingX - player.facingY) * (TILE_WIDTH / 2); 
+        const screenFacingY = (player.facingX + player.facingY) * (TILE_HEIGHT / 2);
+        const gunAngle = Math.atan2(screenFacingY, screenFacingX);
+
+        const mouseRadius = Math.sqrt((input.mouse.x - playerScreenPos.x)**2 + (input.mouse.y - lightCenterY)**2);
+
+        const aimX = playerScreenPos.x + Math.cos(gunAngle) * mouseRadius;
+        const aimY = lightCenterY + Math.sin(gunAngle) * mouseRadius;
+
+        if (player.isAiming) {
+            let laserStartX = playerScreenPos.x;
+            let laserStartY = lightCenterY;
+
+            if (player.weapon !== 'none' && player.weapon !== 'melee') {
+                const wData = player.weaponData[player.weapon];
+                if (wData) {
+                    const flipX = (Math.abs(gunAngle) > Math.PI / 2);
+                    const scopeYOffset = input.isPressed('use_grenade') || player.isAiming ? 9 : 20;
+                    
+                    const transX = playerScreenPos.x + (flipX ? -2 : 2);
+                    const transY = playerScreenPos.y + TILE_HEIGHT / 2 - player.height + scopeYOffset;
+
+                    let gripOffsetX = -5; 
+                    if (['m4a1', 'scar', 'akm'].includes(player.weapon)) gripOffsetX = -8; 
+                    else if (player.weapon === 'famas') gripOffsetX = -15; 
+                    else if (player.weapon === 'shotgun') gripOffsetX = -12; 
+                    else if (player.weapon === 'p90') gripOffsetX = -4; 
+                    else if (['glock', 'uzi'].includes(player.weapon)) gripOffsetX = -3;
+
+                    let localMuzzleX = gripOffsetX + (wData.muzzleX || 0);
+                    let localMuzzleY = -wData.h / 2 + (wData.muzzleY || 0);
+
+                    if (flipX) localMuzzleY = -localMuzzleY;
+
+                    laserStartX = transX + localMuzzleX * Math.cos(gunAngle) - localMuzzleY * Math.sin(gunAngle);
+                    laserStartY = transY + localMuzzleX * Math.sin(gunAngle) + localMuzzleY * Math.cos(gunAngle);
+                }
+            }
+
+            ctx.strokeStyle = 'rgba(231, 76, 60, 0.45)';
+            ctx.lineWidth = 1.2;
+            ctx.setLineDash([4, 4]); 
+            ctx.beginPath();
+            ctx.moveTo(laserStartX, laserStartY);
+            ctx.lineTo(aimX, aimY);
+            ctx.stroke();
+            ctx.setLineDash([]); 
+        }
+
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.moveTo(input.mouse.x - 12, input.mouse.y); ctx.lineTo(input.mouse.x - 4, input.mouse.y);
-        ctx.moveTo(input.mouse.x + 4, input.mouse.y); ctx.lineTo(input.mouse.x + 12, input.mouse.y);
-        ctx.moveTo(input.mouse.x, input.mouse.y - 12); ctx.lineTo(input.mouse.x, input.mouse.y - 4);
-        ctx.moveTo(input.mouse.x, input.mouse.y + 4); ctx.lineTo(input.mouse.x, input.mouse.y + 12);
+        ctx.moveTo(aimX - 12, aimY); ctx.lineTo(aimX - 4, aimY);
+        ctx.moveTo(aimX + 4, aimY); ctx.lineTo(aimX + 12, aimY);
+        ctx.moveTo(aimX, aimY - 12); ctx.lineTo(aimX, aimY - 4);
+        ctx.moveTo(aimX, aimY + 4); ctx.lineTo(aimX, aimY + 12);
         ctx.stroke();
-        ctx.beginPath(); ctx.arc(input.mouse.x, input.mouse.y, 2, 0, Math.PI * 2);
+        
+        ctx.beginPath(); ctx.arc(aimX, aimY, 2, 0, Math.PI * 2);
         ctx.fillStyle = '#ff3333'; ctx.fill();
         ctx.restore();
     }
