@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Zomboid JS Clone - Battle Royale</title>
+    <style>
+        * { 
+            margin: 0; padding: 0; box-sizing: border-box; 
+            -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body { background-color: #111; overflow: hidden; touch-action: none; overscroll-behavior: none; }
+        canvas { display: block; }
+
+        #mobile-controls { position: fixed; bottom: 30px; left: 30px; z-index: 100; }
+        #joystick-container {
+            width: 130px; height: 130px;
+            background-color: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%; position: relative; touch-action: none; box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+        #joystick-knob {
+            width: 50px; height: 50px; background-color: rgba(255, 255, 255, 0.6);
+            border-radius: 50%; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); pointer-events: none; box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+        }
+
+        /* SỬA LẠI: grid-template-columns lên 5 cột để chứa thêm nút lựu đạn */
+        #action-controls {
+            position: fixed; bottom: 30px; right: 30px; 
+            display: grid; grid-template-columns: repeat(5, 60px); grid-template-rows: 60px 60px;
+            gap: 15px; z-index: 100;
+        }
+        .d-btn {
+            background-color: rgba(255, 255, 255, 0.15); border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.1s, background-color 0.2s;
+        }
+        .d-btn:active { transform: scale(0.9); background-color: rgba(255, 255, 255, 0.4); }
+        .d-btn svg { width: 55%; height: 55%; fill: #ffffff; pointer-events: none; }
+        
+        #btn-sprint { grid-column: 1; grid-row: 1; }
+        #btn-inventory { grid-column: 2; grid-row: 1; }
+        #btn-use-heal { grid-column: 3; grid-row: 1; background-color: rgba(231, 76, 60, 0.35); border-color: #e74c3c; }
+        #btn-use-water { grid-column: 4; grid-row: 1; background-color: rgba(52, 152, 219, 0.35); border-color: #3498db; }
+        
+        /* TÍNH NĂNG MỚI: Nút dùng nhanh Lựu Đạn (Màu xanh lục - mặc định ẩn) */
+        #btn-use-grenade { grid-column: 5; grid-row: 1; background-color: rgba(46, 204, 113, 0.35); border-color: #2ecc71; display: none; }
+        
+        #btn-swap { grid-column: 5; grid-row: 2; background-color: rgba(255, 165, 0, 0.25); }
+        #btn-attack { grid-column: 1 / span 4; grid-row: 2; border-radius: 12px; background-color: rgba(255, 50, 50, 0.35); }
+        #btn-attack svg { width: 40px; height: 40px; }
+
+        #proximity-loot {
+            position: fixed; top: 50px; right: 20px; background: rgba(15, 15, 20, 0.85);
+            border: 1px solid #555; border-radius: 6px; padding: 8px; display: none; z-index: 1000;
+            pointer-events: auto; max-height: 200px; min-width: 150px; overflow-y: auto;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+        }
+        .loot-item {
+            color: #fff; font-family: 'Arial', sans-serif; font-size: 13px; font-weight: bold;
+            padding: 6px 10px; margin: 4px 0; background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px; cursor: pointer; border: 1px solid transparent; white-space: nowrap;
+            transition: background 0.1s, border-color 0.1s;
+        }
+        .loot-item:hover { background: rgba(46, 204, 113, 0.25); border-color: #2ecc71; color: #2ecc71; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="proximity-loot"></div>
+
+    <div id="mobile-controls">
+        <div id="joystick-container">
+            <div id="joystick-knob"></div>
+        </div>
+    </div>
+
+    <div id="action-controls">
+        <div id="btn-sprint" class="d-btn">
+            <svg viewBox="0 0 24 24"><path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L6 8.3V13h2V9.6l1.8-.7"/></svg>
+        </div>
+        <div id="btn-inventory" class="d-btn">
+            <svg viewBox="0 0 24 24"><path d="M17 6h-2V4c0-1.1-.9-2-2-2h-2c-1.1 0-2 .9-2 2v2H7c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zM9 4h6v2H9V4zm4 10h-2v-2h2v2z"/></svg>
+        </div>
+        <div id="btn-use-heal" class="d-btn">
+            <svg viewBox="0 0 24 24"><path d="M19 10.5h-5.5V5c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v5.5H5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5h5.5V19c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-5.5H19c.83 0 1.5-.67 1.5-1.5s-.67-1.5-1.5-1.5z"/></svg>
+        </div>
+        <div id="btn-use-water" class="d-btn">
+            <svg viewBox="0 0 24 24"><path d="M12 2c-3.48 0-6.72 1.54-8.71 4.21-.54.73-.42 1.76.27 2.36l1.63 1.4c.5.43 1.25.43 1.76 0L8.71 8.7C10.23 7.6 11.11 7 12 7s1.77.6 3.29 1.7l1.76 1.27c.51.43 1.26.43 1.76 0l1.63-1.4c.69-.6.81-1.63.27-2.36C18.72 3.54 15.48 2 12 2zm0 18c-3.31 0-6-2.69-6-6v-1.5c0-.55.45-1 1-1h10c.55 0 1 .45 1 1V14c0 3.31-2.69 6-6 6z"/></svg>
+        </div>
+        
+        <div id="btn-use-grenade" class="d-btn">
+            <svg viewBox="0 0 24 24"><path d="M12 2c-1.1 0-2 .9-2 2v1H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2h-4V4c0-1.1-.9-2-2-2zm0 5c2.76 0 5 2.24 5 5s-2.24 5-5 5-5-2.24-5-5 2.24-5 5-5z"/></svg>
+        </div>
+        
+        <div id="btn-attack" class="d-btn">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79l6.79 6.79v2.93zm-1-15.86c3.95.49 7 3.85 7 7.93 0 .62-.08 1.21-.21 1.79l-6.79-6.79V4.07z"/></svg>
+        </div>
+        <div id="btn-swap" class="d-btn">
+            <svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+        </div>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+</body>
+</html>
