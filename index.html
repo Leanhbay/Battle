@@ -1,217 +1,951 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CR7 Web Game</title>
-    <style>
-        body { margin: 0; overflow: hidden; background-color: #87CEEB; }
-        #loading {
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            font-family: Arial, sans-serif; font-size: 24px; color: white;
-            background: rgba(0,0,0,0.7); padding: 20px; border-radius: 10px;
-        }
-        #instructions {
-            position: absolute; top: 10px; left: 10px;
-            font-family: Arial, sans-serif; color: white;
-            background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CR7 Football Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{overflow:hidden;background:#070b10;font-family:'Exo 2',sans-serif;color:#fff;user-select:none}
+  canvas#gc{display:block;width:100vw;height:100vh}
+
+  /* --- Loading --- */
+  #ls{position:fixed;inset:0;z-index:2000;background:radial-gradient(ellipse at 50% 40%,#111820 0%,#070b10 70%);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .9s ease,visibility .9s}
+  #ls.hide{opacity:0;visibility:hidden;pointer-events:none}
+  .lt{font-family:'Orbitron',monospace;font-size:clamp(1.4rem,4vw,3rem);font-weight:900;background:linear-gradient(135deg,#e63946,#ff6b6b,#ffd166);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:6px;margin-bottom:.5rem}
+  .ls{font-size:.85rem;color:rgba(255,255,255,.35);letter-spacing:3px;margin-bottom:2.5rem}
+  .lb-wrap{width:min(420px,80vw);height:5px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden}
+  .lb{height:100%;width:0%;background:linear-gradient(90deg,#e63946,#ff6b6b,#ffd166);border-radius:4px;transition:width .35s ease}
+  .ltx{margin-top:1rem;font-size:.78rem;color:rgba(255,255,255,.3)}
+
+  /* --- Vignette --- */
+  #vig{position:fixed;inset:0;pointer-events:none;z-index:5;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55) 100%)}
+
+  /* --- HUD --- */
+  #hud{position:fixed;top:0;left:0;right:0;padding:1rem 1.5rem;display:none;justify-content:space-between;align-items:flex-start;pointer-events:none;z-index:10}
+  .hp{background:rgba(7,11,16,.82);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:.7rem 1.3rem}
+  .hp .lb{font-size:.6rem;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:2.5px;font-family:'Orbitron',monospace}
+  .hp .vl{font-family:'Orbitron',monospace;font-size:1.8rem;font-weight:900;color:#fff;line-height:1.1}
+  .si{background:rgba(7,11,16,.82);backdrop-filter:blur(14px);border:1px solid rgba(230,57,70,.25);border-radius:14px;padding:.55rem 1.1rem;font-family:'Orbitron',monospace;font-size:.72rem;font-weight:700;color:#e63946;letter-spacing:2px;transition:all .2s}
+
+  /* --- Goal Overlay --- */
+  #goal-ov{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;pointer-events:none}
+  #goal-ov.show{display:flex}
+  .goal-txt{font-family:'Orbitron',monospace;font-size:clamp(4rem,12vw,10rem);font-weight:900;color:#e63946;text-shadow:0 0 60px rgba(230,57,70,.7),0 0 120px rgba(230,57,70,.3);animation:goalPulse 1.5s ease-out forwards;letter-spacing:12px}
+  @keyframes goalPulse{0%{transform:scale(.3);opacity:0}30%{transform:scale(1.15);opacity:1}100%{transform:scale(1);opacity:0}}
+
+  /* --- Controls --- */
+  #cp{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:rgba(7,11,16,.78);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:.7rem 1.5rem;display:none;gap:1.5rem;z-index:10;pointer-events:none;flex-wrap:wrap;justify-content:center}
+  .ci{display:flex;align-items:center;gap:.4rem;color:rgba(255,255,255,.5);font-size:.72rem;white-space:nowrap}
+  .k{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);border-radius:5px;padding:.15rem .45rem;font-family:'Orbitron',monospace;font-size:.6rem;color:#fff;min-width:24px;text-align:center}
+
+  /* --- Minimap --- */
+  #mm{position:fixed;bottom:1.5rem;right:1.5rem;width:140px;height:95px;background:rgba(7,11,16,.78);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.1);border-radius:12px;z-index:10;overflow:hidden;display:none}
+  #mm canvas{width:100%;height:100%}
+
+  /* --- Mobile Controls --- */
+  #mob{position:fixed;bottom:0;left:0;right:0;z-index:15;display:none;padding:1rem}
+  .mob-row{display:flex;justify-content:space-between;align-items:flex-end}
+  .mob-dpad{display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,56px);gap:4px}
+  .mob-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:12px;color:rgba(255,255,255,.6);font-size:1.3rem;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+  .mob-btn:active{background:rgba(230,57,70,.35);border-color:rgba(230,57,70,.5)}
+  .mob-btn.empty{background:transparent;border:none}
+  .mob-actions{display:flex;flex-direction:column;gap:8px;align-items:center}
+  .mob-btn.act{width:64px;height:64px;border-radius:50%;font-family:'Orbitron',monospace;font-size:.55rem;font-weight:700;letter-spacing:1px}
+  @media(max-width:768px){#cp{display:none!important}#mob{display:block}}
+  @media(hover:none)and(pointer:coarse){#cp{display:none!important}#mob{display:block}}
+</style>
 </head>
 <body>
-    <div id="loading">Đang tải mô hình và hoạt ảnh (Có thể mất một lúc do load từ link)... 0%</div>
-    <div id="instructions">
-        <strong>Điều khiển:</strong><br>
-        W / A / S / D : Di chuyển<br>
-        Shift + W: Chạy<br>
-        Space: Nhảy
+
+<div id="ls">
+  <div class="lt">CR7 FOOTBALL</div>
+  <div class="ls">3D CHARACTER GAME</div>
+  <div class="lb-wrap"><div class="lb" id="lbar"></div></div>
+  <div class="ltx" id="ltxt">Dang khoi tao...</div>
+</div>
+
+<div id="vig"></div>
+
+<div id="goal-ov"><div class="goal-txt">GOAL!</div></div>
+
+<div id="hud">
+  <div class="hp"><div class="lb">Ban thang</div><div class="vl" id="sc">0</div></div>
+  <div class="si" id="st">IDLE</div>
+  <div class="hp" style="text-align:right"><div class="lb">Toc do</div><div class="vl" id="spd">0.0</div></div>
+</div>
+
+<div id="cp">
+  <div class="ci"><span class="k">W</span> Di chuyen</div>
+  <div class="ci"><span class="k">A</span><span class="k">D</span> Re</div>
+  <div class="ci"><span class="k">SHIFT</span> Chay</div>
+  <div class="ci"><span class="k">SPACE</span> Nhay</div>
+  <div class="ci"><span class="k">E</span> Sap bong</div>
+  <div class="ci"><span class="k">R</span> Dat lai bong</div>
+</div>
+
+<div id="mm"><canvas id="mc"></canvas></div>
+
+<div id="mob">
+  <div class="mob-row">
+    <div class="mob-dpad">
+      <div class="mob-btn empty"></div>
+      <div class="mob-btn" data-key="KeyW">&#9650;</div>
+      <div class="mob-btn empty"></div>
+      <div class="mob-btn" data-key="KeyA">&#9664;</div>
+      <div class="mob-btn empty"></div>
+      <div class="mob-btn" data-key="KeyD">&#9654;</div>
+      <div class="mob-btn empty"></div>
+      <div class="mob-btn" data-key="KeyS">&#9660;</div>
+      <div class="mob-btn empty"></div>
     </div>
+    <div class="mob-actions">
+      <div class="mob-btn act" data-key="Space">NHAY</div>
+      <div class="mob-btn act" data-key="ShiftLeft">CHAY</div>
+      <div class="mob-btn act" data-key="KeyE">SAP</div>
+    </div>
+  </div>
+</div>
 
-    <script type="module">
-        import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.module.js';
-        import { FBXLoader } from 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/jsm/loaders/FBXLoader.js';
+<canvas id="gc"></canvas>
 
-        // 1. CHUYỂN ĐỔI LINK GITHUB SANG LINK RAW
-        const BASE_URL = "https://raw.githubusercontent.com/Leanhbay/Minecraft/main/";
-        const urls = {
-            model: BASE_URL + "3d-rigged-cristiano-ronaldo-al-nassr.fbx",
-            idle: BASE_URL + "Idle.fbx",
-            walk: BASE_URL + "Swagger%20Walk.fbx",
-            run: BASE_URL + "Running.fbx",
-            jump: BASE_URL + "Jumping.fbx",
-            walkRight: BASE_URL + "r%E1%BA%BD%20ph%E1%BA%A3i.fbx",
-            walkLeft: BASE_URL + "r%E1%BA%BD%20sang%20tr%C3%A1i.fbx",
-            walkJump: BASE_URL + "nh%E1%BA%A3y%20khi%20%C4%91i%20b%E1%BB%99.fbx",
-            runRight: BASE_URL + "ch%E1%BA%A1y%20r%E1%BA%BD%20ph%E1%BA%A3i.fbx",
-            runLeft: BASE_URL + "r%E1%BA%BD%20tr%C3%A1i%20khi%20ch%E1%BA%A1y.fbx",
-            runJump: BASE_URL + "nh%E1%BA%A3y%20khi%20ch%E1%BA%A1y.fbx"
-        };
+<script type="importmap">
+{
+  "imports":{
+    "three":"https://unpkg.com/three@0.163.0/build/three.module.js",
+    "three/addons/":"https://unpkg.com/three@0.163.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 
-        // 2. KHỞI TẠO KHÔNG GIAN GAME (SCENE)
-        const scene = new THREE.Scene();
-        scene.fog = new THREE.FogExp2(0x87CEEB, 0.002);
+/* ============================
+   CAU HINH URL
+   ============================ */
+const B = 'https://raw.githubusercontent.com/Leanhbay/Minecraft/main/';
+const MODEL_URL = B + '3d-rigged-cristiano-ronaldo-al-nassr.fbx';
+const ANIMS = {
+  idle:          B + 'Idle.fbx',
+  walk:          B + 'Swagger%20Walk.fbx',
+  run:           B + 'Running.fbx',
+  jump:          B + 'Jumping.fbx',
+  walkTurnRight: B + 'r%E1%BA%BD%20ph%E1%BA%A3i.fbx',
+  walkTurnLeft:  B + 'r%E1%BA%BD%20sang%20tr%C3%A1i.fbx',
+  walkJump:      B + 'nh%E1%BA%A3y%20khi%20%C4%91i%20b%E1%BB%99.fbx',
+  runTurnRight:  B + 'ch%E1%BA%A1y%20r%E1%BA%BD%20ph%E1%BA%A3i.fbx',
+  runTurnLeft:   B + 'r%E1%BA%BD%20tr%C3%A1i%20khi%20ch%E1%BA%A1y.fbx',
+  runJump:       B + 'nh%E1%BA%A3y%20khi%20ch%E1%BA%A1y.fbx'
+};
 
-        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
-        camera.position.set(0, 200, 400);
+/* ============================
+   DOM
+   ============================ */
+const $ls = document.getElementById('ls');
+const $lbar = document.getElementById('lbar');
+const $ltxt = document.getElementById('ltxt');
+const $hud = document.getElementById('hud');
+const $cp = document.getElementById('cp');
+const $mm = document.getElementById('mm');
+const $sc = document.getElementById('sc');
+const $st = document.getElementById('st');
+const $spd = document.getElementById('spd');
+const $goalOv = document.getElementById('goal-ov');
+const $mc = document.getElementById('mc');
+const mctx = $mc.getContext('2d');
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        document.body.appendChild(renderer.domElement);
+/* ============================
+   THREE.JS SETUP
+   ============================ */
+const canvas = document.getElementById('gc');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-        // Ánh sáng
-        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444);
-        hemiLight.position.set(0, 200, 0);
-        scene.add(hemiLight);
-        const dirLight = new THREE.DirectionalLight(0xffffff);
-        dirLight.position.set(0, 200, 100);
-        dirLight.castShadow = true;
-        scene.add(dirLight);
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x0a0e18, 0.004);
 
-        // Mặt đất
-        const mesh = new THREE.Mesh(
-            new THREE.PlaneGeometry(2000, 2000),
-            new THREE.MeshPhongMaterial({ color: 0x999999, depthWrite: false })
-        );
-        mesh.rotation.x = -Math.PI / 2;
-        mesh.receiveShadow = true;
-        scene.add(mesh);
+const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 400);
+camera.position.set(0, 5, 10);
 
-        // 3. TẢI MÔ HÌNH VÀ HOẠT ẢNH
-        const loader = new FBXLoader();
-        let mixer, character;
-        const actions = {};
-        let currentAction;
-        let loadedCount = 0;
-        const totalFiles = Object.keys(urls).length;
+/* ============================
+   ANH SANG
+   ============================ */
+scene.add(new THREE.AmbientLight(0x334466, 0.6));
 
-        const updateLoading = () => {
-            loadedCount++;
-            document.getElementById('loading').innerText = `Đang tải: ${Math.round((loadedCount / totalFiles) * 100)}%`;
-            if (loadedCount === totalFiles) {
-                document.getElementById('loading').style.display = 'none';
-            }
-        };
+const sun = new THREE.DirectionalLight(0xfff0dd, 1.8);
+sun.position.set(15, 30, 10);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+const sc = sun.shadow.camera;
+sc.left = -55; sc.right = 55; sc.top = 40; sc.bottom = -40; sc.near = 1; sc.far = 80;
+sun.shadow.bias = -0.001;
+scene.add(sun);
+scene.add(sun.target);
 
-        // Tải nhân vật chính
-        loader.load(urls.model, (object) => {
-            character = object;
-            mixer = new THREE.AnimationMixer(character);
-            
-            // Xử lý bóng đổ
-            character.traverse((child) => {
-                if (child.isMesh) {
-                    child.castShadow = true;
-                    child.receiveShadow = true;
-                }
-            });
-            
-            // Chỉnh kích thước nhân vật cho phù hợp
-            character.scale.set(0.5, 0.5, 0.5); 
-            scene.add(character);
-            updateLoading();
+scene.add(new THREE.DirectionalLight(0x5577aa, 0.35).translateX(-15).translateY(10).translateZ(-10));
+scene.add(new THREE.HemisphereLight(0x1a2a4a, 0x0a1a0a, 0.4));
 
-            // Hàm tải các hoạt ảnh đính kèm vào nhân vật
-            const loadAnimation = (key, url) => {
-                loader.load(url, (animObj) => {
-                    if(animObj.animations.length > 0) {
-                        const action = mixer.clipAction(animObj.animations[0]);
-                        actions[key] = action;
-                    }
-                    updateLoading();
-                    
-                    // Nếu đã tải xong tất cả, bắt đầu bằng Idle
-                    if(loadedCount === totalFiles) {
-                        currentAction = actions['idle'];
-                        if(currentAction) currentAction.play();
-                    }
-                });
-            };
+// Den san bong
+const lampPos = [[-35, 22, -42],[35, 22, -42],[-35, 22, 42],[35, 22, 42]];
+lampPos.forEach(p => {
+  const sp = new THREE.SpotLight(0xfff5e0, 100, 90, Math.PI / 3.5, 0.6, 1.2);
+  sp.position.set(...p);
+  sp.target.position.set(0, 0, 0);
+  scene.add(sp);
+  scene.add(sp.target);
+});
 
-            // Tải từng hoạt ảnh
-            loadAnimation('idle', urls.idle);
-            loadAnimation('walk', urls.walk);
-            loadAnimation('run', urls.run);
-            loadAnimation('jump', urls.jump);
-            loadAnimation('walkRight', urls.walkRight);
-            loadAnimation('walkLeft', urls.walkLeft);
-            loadAnimation('walkJump', urls.walkJump);
-            loadAnimation('runRight', urls.runRight);
-            loadAnimation('runLeft', urls.runLeft);
-            loadAnimation('runJump', urls.runJump);
+/* ============================
+   SAN BONG
+   ============================ */
+function buildPitch() {
+  const gnd = new THREE.Mesh(
+    new THREE.PlaneGeometry(300, 300),
+    new THREE.MeshStandardMaterial({ color: 0x14381a, roughness: 1 })
+  );
+  gnd.rotation.x = -Math.PI / 2;
+  gnd.position.y = -0.02;
+  gnd.receiveShadow = true;
+  scene.add(gnd);
 
+  const pitch = new THREE.Mesh(
+    new THREE.PlaneGeometry(105, 68),
+    new THREE.MeshStandardMaterial({ color: 0x2a7d42, roughness: 0.85 })
+  );
+  pitch.rotation.x = -Math.PI / 2;
+  pitch.position.y = 0.0;
+  pitch.receiveShadow = true;
+  scene.add(pitch);
+
+  const rim = new THREE.Mesh(
+    new THREE.PlaneGeometry(107, 70),
+    new THREE.MeshStandardMaterial({ color: 0x236e38, roughness: 0.9 })
+  );
+  rim.rotation.x = -Math.PI / 2;
+  rim.position.y = -0.005;
+  rim.receiveShadow = true;
+  scene.add(rim);
+
+  const lm = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const T = 0.1;
+
+  function line(x, z, w, h) {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), lm);
+    m.rotation.x = -Math.PI / 2;
+    m.position.set(x, 0.015, z);
+    scene.add(m);
+  }
+  line(0, -34, 105, T);
+  line(0, 34, 105, T);
+  line(-52.5, 0, T, 68);
+  line(52.5, 0, T, 68);
+  line(0, 0, T, 68);
+  const cr = new THREE.Mesh(new THREE.RingGeometry(9.1, 9.2, 64), lm);
+  cr.rotation.x = -Math.PI / 2; cr.position.y = 0.015; scene.add(cr);
+  const cd = new THREE.Mesh(new THREE.CircleGeometry(0.3, 24), lm);
+  cd.rotation.x = -Math.PI / 2; cd.position.y = 0.015; scene.add(cd);
+  line(-52.5 + 16.5, 0, T, 40.32);
+  line(-52.5, -20.16, 16.5, T);
+  line(-52.5, 20.16, 16.5, T);
+  line(52.5 - 16.5, 0, T, 40.32);
+  line(52.5, -20.16, 16.5, T);
+  line(52.5, 20.16, 16.5, T);
+  line(-52.5 + 5.5, 0, T, 18.32);
+  line(-52.5, -9.16, 5.5, T);
+  line(-52.5, 9.16, 5.5, T);
+  line(52.5 - 5.5, 0, T, 18.32);
+  line(52.5, -9.16, 5.5, T);
+  line(52.5, 9.16, 5.5, T);
+  const pp1 = new THREE.Mesh(new THREE.CircleGeometry(0.2, 16), lm);
+  pp1.rotation.x = -Math.PI / 2; pp1.position.set(-52.5 + 11, 0.015, 0); scene.add(pp1);
+  const pp2 = pp1.clone(); pp2.position.x = 52.5 - 11; scene.add(pp2);
+
+  buildGoal(52.5, 0);
+  buildGoal(-52.5, Math.PI);
+}
+
+function buildGoal(x, ry) {
+  const pm = new THREE.MeshStandardMaterial({ color: 0xeeeeee, metalness: 0.85, roughness: 0.15 });
+  const r = 0.06, w = 7.32, h = 2.44, d = 1.8;
+  const g = new THREE.Group();
+
+  const lp = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 8), pm);
+  lp.position.set(0, h / 2, -w / 2); lp.castShadow = true; g.add(lp);
+
+  const rp = lp.clone(); rp.position.z = w / 2; g.add(rp);
+
+  const cb = new THREE.Mesh(new THREE.CylinderGeometry(r, r, w + r * 2, 8), pm);
+  cb.rotation.x = Math.PI / 2; cb.position.set(0, h, 0); cb.castShadow = true; g.add(cb);
+
+  const nm = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.08, side: THREE.DoubleSide, wireframe: true });
+  const nb = new THREE.Mesh(new THREE.PlaneGeometry(w, h, 12, 5), nm);
+  nb.position.set(d * (ry === 0 ? 1 : -1), h / 2, 0); g.add(nb);
+  const nt = new THREE.Mesh(new THREE.PlaneGeometry(d, w, 3, 12), nm);
+  nt.rotation.x = Math.PI / 2;
+  nt.position.set(d * (ry === 0 ? 0.5 : -0.5), h, 0); g.add(nt);
+  const ns1 = new THREE.Mesh(new THREE.PlaneGeometry(d, h, 3, 5), nm);
+  ns1.rotation.y = Math.PI / 2;
+  ns1.position.set(d * (ry === 0 ? 0.5 : -0.5), h / 2, -w / 2); g.add(ns1);
+  const ns2 = ns1.clone(); ns2.position.z = w / 2; g.add(ns2);
+
+  g.position.x = x; g.rotation.y = ry; scene.add(g);
+}
+buildPitch();
+
+/* ============================
+   SAN DAU (KHAN GIA)
+   ============================ */
+function buildStadium() {
+  const configs = [
+    { p: [0, 6, -49], s: [112, 14, 7], c: 0xc9303e },
+    { p: [0, 6, 49], s: [112, 14, 7], c: 0xd4a030 },
+    { p: [-63, 6, 0], s: [7, 14, 78], c: 0xc9303e },
+    { p: [63, 6, 0], s: [7, 14, 78], c: 0xd4a030 }
+  ];
+  configs.forEach(c => {
+    const m = new THREE.Mesh(
+      new THREE.BoxGeometry(...c.s),
+      new THREE.MeshStandardMaterial({ color: c.c, roughness: 0.95 })
+    );
+    m.position.set(...c.p); m.receiveShadow = true; scene.add(m);
+  });
+
+  lampPos.forEach(p => {
+    const pole = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.25, 0.45, 22, 6),
+      new THREE.MeshStandardMaterial({ color: 0x556677, metalness: 0.5, roughness: 0.5 })
+    );
+    pole.position.set(p[0], 11, p[2]); pole.castShadow = true; scene.add(pole);
+    const lb = new THREE.Mesh(
+      new THREE.BoxGeometry(2.5, 0.8, 1.5),
+      new THREE.MeshBasicMaterial({ color: 0xfff5dd })
+    );
+    lb.position.set(p[0], 22, p[2]); scene.add(lb);
+  });
+}
+buildStadium();
+
+/* ============================
+   TROI DEM
+   ============================ */
+(function buildSky() {
+  const geo = new THREE.SphereGeometry(180, 32, 24);
+  const mat = new THREE.ShaderMaterial({
+    side: THREE.BackSide, depthWrite: false,
+    uniforms: {
+      c1: { value: new THREE.Color(0x050810) },
+      c2: { value: new THREE.Color(0x0f1a2e) },
+      c3: { value: new THREE.Color(0x1a2844) }
+    },
+    vertexShader: `varying vec3 vPos;void main(){vPos=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+    fragmentShader: `
+      uniform vec3 c1,c2,c3;varying vec3 vPos;
+      void main(){
+        float h=normalize(vPos).y;
+        vec3 col=mix(c3,c2,smoothstep(-.1,.2,h));
+        col=mix(col,c1,smoothstep(.2,.7,h));
+        gl_FragColor=vec4(col,1.);
+      }`
+  });
+  scene.add(new THREE.Mesh(geo, mat));
+
+  const sp = new Float32Array(800 * 3);
+  for (let i = 0; i < 800; i++) {
+    const th = Math.random() * Math.PI * 2;
+    const ph = Math.random() * Math.PI * 0.45;
+    const r = 140 + Math.random() * 30;
+    sp[i*3] = r*Math.sin(ph)*Math.cos(th);
+    sp[i*3+1] = r*Math.cos(ph);
+    sp[i*3+2] = r*Math.sin(ph)*Math.sin(th);
+  }
+  const sg = new THREE.BufferGeometry();
+  sg.setAttribute('position', new THREE.BufferAttribute(sp, 3));
+  scene.add(new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffffff, size: 0.4, transparent: true, opacity: 0.5 })));
+})();
+
+/* ============================
+   BONG
+   ============================ */
+const ball = new THREE.Mesh(
+  new THREE.IcosahedronGeometry(0.22, 2),
+  new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.25, metalness: 0.05 })
+);
+ball.position.set(5, 0.22, 0);
+ball.castShadow = true;
+scene.add(ball);
+
+const ballGlow = new THREE.PointLight(0xfff5dd, 0.3, 4);
+ball.add(ballGlow);
+
+const ballVel = new THREE.Vector3();
+const BALL_FRIC = 0.982;
+const BALL_BOUNCE = 0.55;
+let ballRestTimer = 0;
+
+/* ============================
+   TRANG THAI NHAN VAT
+   ============================ */
+const P = {
+  vel: new THREE.Vector3(),
+  speed: 0,
+  grounded: true,
+  jumping: false,
+  running: false,
+  turnDir: 0,
+  vVel: 0,
+  WALK_SPD: 3.8,
+  RUN_SPD: 7.5,
+  JUMP_F: 7.5,
+  GRAV: -19,
+  ROT_SPD: 2.8
+};
+
+/* ============================
+   CAMERA
+   ============================ */
+let camAngle = 0, camDist = 8, camH = 4.5;
+let mouseDown = false, lastMX = 0;
+
+canvas.addEventListener('mousedown', e => { mouseDown = true; lastMX = e.clientX; });
+window.addEventListener('mouseup', () => { mouseDown = false; });
+canvas.addEventListener('mousemove', e => {
+  if (mouseDown) { camAngle -= (e.clientX - lastMX) * 0.004; lastMX = e.clientX; }
+});
+canvas.addEventListener('wheel', e => {
+  camDist = THREE.MathUtils.clamp(camDist + e.deltaY * 0.008, 3, 16);
+  camH = THREE.MathUtils.clamp(camH + e.deltaY * 0.004, 1.5, 9);
+}, { passive: true });
+
+let touchSX = 0;
+canvas.addEventListener('touchstart', e => { if (e.touches.length === 1) touchSX = e.touches[0].clientX; }, { passive: true });
+canvas.addEventListener('touchmove', e => {
+  if (e.touches.length === 1) {
+    camAngle -= (e.touches[0].clientX - touchSX) * 0.005;
+    touchSX = e.touches[0].clientX;
+  }
+}, { passive: true });
+
+/* ============================
+   INPUT
+   ============================ */
+const keys = {};
+window.addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') e.preventDefault(); });
+window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+document.querySelectorAll('.mob-btn[data-key]').forEach(btn => {
+  const k = btn.dataset.key;
+  const on = () => { keys[k] = true; };
+  const off = () => { keys[k] = false; };
+  btn.addEventListener('touchstart', e => { e.preventDefault(); on(); }, { passive: false });
+  btn.addEventListener('touchend', e => { e.preventDefault(); off(); }, { passive: false });
+  btn.addEventListener('touchcancel', off);
+});
+
+/* ============================
+   TAI MO HINH & HOAT ANH
+   ============================ */
+const fbxLoader = new FBXLoader();
+let char = null, mixer = null;
+const actions = {};
+let curAction = null, curState = 'idle';
+let totalFiles = Object.keys(ANIMS).length + 1;
+let loadedFiles = 0;
+
+function prog(t) {
+  loadedFiles++;
+  const pct = Math.round((loadedFiles / totalFiles) * 100);
+  $lbar.style.width = pct + '%';
+  $ltxt.textContent = t + ` (${pct}%)`;
+}
+
+function loadModel() {
+  return new Promise((res, rej) => {
+    fbxLoader.load(MODEL_URL, fbx => {
+      fbx.scale.setScalar(0.01);
+      fbx.traverse(c => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
+      char = fbx;
+      scene.add(char);
+      mixer = new THREE.AnimationMixer(char);
+      prog('Da tai mo hinh Ronaldo');
+      res();
+    }, undefined, err => { console.error(err); prog('Loi tai mo hinh!'); rej(err); });
+  });
+}
+
+function loadAnim(name) {
+  return new Promise(res => {
+    fbxLoader.load(ANIMS[name], fbx => {
+      if (fbx.animations.length > 0) {
+        const clip = fbx.animations[0];
+
+        // --- BỘ LỌC HOẠT ẢNH: SỬA LỖI BIẾN DẠNG, XUYÊN ĐẤT VÀ LẬT NẰM ---
+        clip.tracks = clip.tracks.filter(track => {
+          const trackName = track.name.toLowerCase();
+          
+          // 1. Chống lỗi biến dạng (Spaghetti Monster): Loại bỏ hoàn toàn track Scale
+          if (trackName.endsWith('.scale')) return false;
+          
+          // 2. Chống lún qua đất / trôi lơ lửng: Loại bỏ hoàn toàn track Position
+          // Việc di chuyển và nhảy thực tế (Trục Y) đã được tính toán bằng vật lý code
+          if (trackName.endsWith('.position')) return false;
+          
+          // 3. Chống bị lật nằm ra đất: Loại bỏ Quaternion xoay 90 độ của Root Object
+          // Chỉ giữ lại track xoay của các khớp xương (có chứa chữ mixamorig, bone, spine, v.v.)
+          if (trackName.endsWith('.quaternion')) {
+             if (!trackName.includes('mixamorig') && !trackName.includes('bone') && !trackName.includes('hips') && !trackName.includes('spine')) {
+                 return false;
+             }
+          }
+          
+          return true;
         });
+        // -------------------------------------------------------------
 
-        // 4. HỆ THỐNG ĐIỀU KHIỂN & CHUYỂN ĐỔI HOẠT ẢNH
-        const keys = { w: false, a: false, s: false, d: false, shift: false, space: false };
-
-        window.addEventListener('keydown', (e) => {
-            if(e.key.toLowerCase() === 'w') keys.w = true;
-            if(e.key.toLowerCase() === 'a') keys.a = true;
-            if(e.key.toLowerCase() === 'd') keys.d = true;
-            if(e.key === 'Shift') keys.shift = true;
-            if(e.key === ' ') keys.space = true;
-            updateAnimation();
-        });
-
-        window.addEventListener('keyup', (e) => {
-            if(e.key.toLowerCase() === 'w') keys.w = false;
-            if(e.key.toLowerCase() === 'a') keys.a = false;
-            if(e.key.toLowerCase() === 'd') keys.d = false;
-            if(e.key === 'Shift') keys.shift = false;
-            if(e.key === ' ') keys.space = false;
-            updateAnimation();
-        });
-
-        // Hàm chuyển đổi hoạt ảnh mượt mà
-        function playAction(name) {
-            const nextAction = actions[name];
-            if (!nextAction || currentAction === nextAction) return;
-            nextAction.reset().fadeIn(0.2).play();
-            if (currentAction) currentAction.fadeOut(0.2);
-            currentAction = nextAction;
+        const a = mixer.clipAction(clip);
+        if (name.includes('Jump') || name === 'jump') {
+          a.setLoop(THREE.LoopOnce, 1);
+          a.clampWhenFinished = true;
+        } else {
+          a.setLoop(THREE.LoopRepeat);
         }
+        actions[name] = a;
+        prog(`Hoat anh: ${name}`);
+      } else {
+        prog(`Khong co anim: ${name}`);
+      }
+      res();
+    }, undefined, () => { prog(`Loi: ${name}`); res(); });
+  });
+}
 
-        // Logic xác định trạng thái nhân vật
-        function updateAnimation() {
-            if (!mixer) return;
+/* ============================
+   ANIMATION STATE MACHINE
+   ============================ */
+const STATE_LABELS = {
+  idle:'DUNG YEN', walk:'DI BO', run:'CHAY', jump:'NHAY',
+  walkTurnRight:'RE PHAI', walkTurnLeft:'RE TRAI', walkJump:'NHAY(DI BO)',
+  runTurnRight:'CHAY RE PHAI', runTurnLeft:'CHAY RE TRAI', runJump:'NHAY(CHAY)'
+};
 
-            if (keys.space) {
-                if (keys.w && keys.shift) playAction('runJump');
-                else if (keys.w) playAction('walkJump');
-                else playAction('jump');
-            } else if (keys.w) {
-                if (keys.shift) {
-                    if (keys.d) playAction('runRight');
-                    else if (keys.a) playAction('runLeft');
-                    else playAction('run');
-                } else {
-                    if (keys.d) playAction('walkRight');
-                    else if (keys.a) playAction('walkLeft');
-                    else playAction('walk');
-                }
-            } else {
-                playAction('idle');
-            }
-        }
+function playAnim(state, dur = 0.22) {
+  if (curState === state) return;
+  const na = actions[state];
+  if (!na) return;
+  if (curAction) curAction.crossFadeTo(na, dur, true);
+  if (state.includes('Jump') || state === 'jump') na.reset();
+  na.play();
+  curAction = na;
+  curState = state;
+  $st.textContent = STATE_LABELS[state] || state.toUpperCase();
+}
 
-        // 5. VÒNG LẶP RENDER GAME
-        const clock = new THREE.Clock();
-        function animate() {
-            requestAnimationFrame(animate);
-            const delta = clock.getDelta();
-            if (mixer) mixer.update(delta);
-            renderer.render(scene, camera);
-        }
-        animate();
+/* ============================
+   CAP NHAT NHAN VAT
+   ============================ */
+function updatePlayer(dt) {
+  if (!char) return;
 
-        // Xử lý khi đổi kích thước cửa sổ
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-    </script>
+  const fwd = keys['KeyW'] || keys['ArrowUp'];
+  const bck = keys['KeyS'] || keys['ArrowDown'];
+  const lft = keys['KeyA'] || keys['ArrowLeft'];
+  const rgt = keys['KeyD'] || keys['ArrowRight'];
+  const shf = keys['ShiftLeft'] || keys['ShiftRight'];
+  const jmp = keys['Space'];
+  const kick = keys['KeyE'];
+  const reset = keys['KeyR'];
+
+  P.running = !!(shf && fwd);
+  const maxSpd = P.running ? P.RUN_SPD : P.WALK_SPD;
+
+  const camFwd = new THREE.Vector3(-Math.sin(camAngle), 0, -Math.cos(camAngle));
+  const camRgt = new THREE.Vector3(Math.cos(camAngle), 0, -Math.sin(camAngle));
+
+  const moveDir = new THREE.Vector3();
+  if (fwd) moveDir.add(camFwd);
+  if (bck) moveDir.sub(camFwd);
+  if (rgt) moveDir.add(camRgt);
+  if (lft) moveDir.sub(camRgt);
+
+  const moving = moveDir.lengthSq() > 0.001;
+
+  if (moving) {
+    moveDir.normalize();
+    P.speed = THREE.MathUtils.lerp(P.speed, maxSpd, dt * 6);
+    P.vel.x = moveDir.x * P.speed;
+    P.vel.z = moveDir.z * P.speed;
+
+    const target = Math.atan2(moveDir.x, moveDir.z);
+    let diff = target - char.rotation.y;
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+
+    P.turnDir = Math.abs(diff) > 0.35 ? Math.sign(diff) : 0;
+    const rs = P.running ? P.ROT_SPD * 1.4 : P.ROT_SPD;
+    char.rotation.y += diff * Math.min(1, rs * dt);
+  } else {
+    P.speed = THREE.MathUtils.lerp(P.speed, 0, dt * 10);
+    P.vel.x *= 0.85;
+    P.vel.z *= 0.85;
+    P.turnDir = 0;
+  }
+
+  if (jmp && P.grounded && !P.jumping) {
+    P.vVel = P.JUMP_F;
+    P.grounded = false;
+    P.jumping = true;
+    keys['Space'] = false;
+  }
+
+  if (!P.grounded) P.vVel += P.GRAV * dt;
+
+  char.position.x += P.vel.x * dt;
+  char.position.y += P.vVel * dt;
+  char.position.z += P.vel.z * dt;
+
+  if (char.position.y <= 0) {
+    char.position.y = 0;
+    P.vVel = 0;
+    P.grounded = true;
+    P.jumping = false;
+  }
+
+  char.position.x = THREE.MathUtils.clamp(char.position.x, -51, 51);
+  char.position.z = THREE.MathUtils.clamp(char.position.z, -33, 33);
+
+  if (kick) { kickBall(); keys['KeyE'] = false; }
+  if (reset) { resetBall(); keys['KeyR'] = false; }
+
+  if (!P.grounded) {
+    if (P.running) playAnim('runJump', 0.08);
+    else if (P.speed > 1.5) playAnim('walkJump', 0.08);
+    else playAnim('jump', 0.08);
+  } else if (moving) {
+    if (P.running) {
+      if (P.turnDir > 0) playAnim('runTurnRight', 0.18);
+      else if (P.turnDir < 0) playAnim('runTurnLeft', 0.18);
+      else playAnim('run', 0.18);
+    } else {
+      if (P.turnDir > 0) playAnim('walkTurnRight', 0.18);
+      else if (P.turnDir < 0) playAnim('walkTurnLeft', 0.18);
+      else playAnim('walk', 0.18);
+    }
+  } else {
+    playAnim('idle', 0.3);
+  }
+
+  $spd.textContent = P.speed.toFixed(1);
+}
+
+/* ============================
+   BONG PHYSICS
+   ============================ */
+function kickBall() {
+  if (!char) return;
+  const cp = char.position.clone(); cp.y = 0.22;
+  const d = new THREE.Vector3(Math.sin(char.rotation.y), 0, Math.cos(char.rotation.y));
+  const dist = cp.distanceTo(ball.position);
+  if (dist < 2.8) {
+    const pw = P.running ? 22 : 14;
+    ballVel.copy(d).multiplyScalar(pw);
+    ballVel.y = 4 + Math.random() * 4;
+    spawnKickFX(ball.position.clone());
+  }
+}
+
+function resetBall() {
+  ball.position.set(0, 0.22, 0);
+  ballVel.set(0, 0, 0);
+}
+
+function checkGoal() {
+  const bx = ball.position.x, by = ball.position.y, bz = ball.position.z;
+  if ((bx > 50 || bx < -50) && Math.abs(bz) < 3.66 && by < 2.44 && by > 0) {
+    score++;
+    $sc.textContent = score;
+    showGoalFX();
+    setTimeout(resetBall, 1500);
+  }
+}
+
+let score = 0;
+let ballStopTime = 0;
+
+function updateBall(dt) {
+  ballVel.y -= 16 * dt;
+  ball.position.x += ballVel.x * dt;
+  ball.position.y += ballVel.y * dt;
+  ball.position.z += ballVel.z * dt;
+
+  if (ball.position.y < 0.22) {
+    ball.position.y = 0.22;
+    ballVel.y = Math.abs(ballVel.y) * BALL_BOUNCE;
+    ballVel.x *= BALL_FRIC;
+    ballVel.z *= BALL_FRIC;
+    if (Math.abs(ballVel.y) < 0.3) ballVel.y = 0;
+  }
+
+  if (Math.abs(ball.position.x) > 53) {
+    ball.position.x = Math.sign(ball.position.x) * 53;
+    ballVel.x *= -0.4;
+  }
+  if (Math.abs(ball.position.z) > 35) {
+    ball.position.z = Math.sign(ball.position.z) * 35;
+    ballVel.z *= -0.4;
+  }
+
+  const spd = ballVel.length();
+  if (spd > 0.2) {
+    ball.rotateOnWorldAxis(new THREE.Vector3(-ballVel.z, 0, ballVel.x).normalize(), spd * dt * 3);
+  }
+
+  if (char) {
+    const dx = ball.position.x - char.position.x;
+    const dz = ball.position.z - char.position.z;
+    const dist = Math.sqrt(dx * dx + dz * dz);
+    if (dist < 0.7 && ball.position.y < 1.2) {
+      const push = new THREE.Vector3(dx, 0, dz).normalize();
+      const f = P.speed * 0.7 + 0.8;
+      ballVel.x += push.x * f;
+      ballVel.z += push.z * f;
+      ballVel.y += 0.8;
+    }
+  }
+
+  if (spd < 0.15 && ball.position.y < 0.3) {
+    ballStopTime += dt;
+    if (ballStopTime > 5) resetBall();
+  } else {
+    ballStopTime = 0;
+  }
+
+  checkGoal();
+}
+
+/* ============================
+   HIEU UNG
+   ============================ */
+const particleSystems = [];
+
+function spawnParticles(pos, count, color1, color2, speed, life, size) {
+  const geo = new THREE.BufferGeometry();
+  const posArr = new Float32Array(count * 3);
+  const colArr = new Float32Array(count * 3);
+  const vels = [];
+  const c1 = new THREE.Color(color1), c2 = new THREE.Color(color2);
+
+  for (let i = 0; i < count; i++) {
+    posArr[i*3] = pos.x; posArr[i*3+1] = pos.y; posArr[i*3+2] = pos.z;
+    const c = c1.clone().lerp(c2, Math.random());
+    colArr[i*3] = c.r; colArr[i*3+1] = c.g; colArr[i*3+2] = c.b;
+    vels.push(new THREE.Vector3((Math.random()-.5)*speed, Math.random()*speed*.7, (Math.random()-.5)*speed));
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colArr, 3));
+  const mat = new THREE.PointsMaterial({ size, vertexColors: true, transparent: true, opacity: 1, depthWrite: false });
+  const pts = new THREE.Points(geo, mat);
+  pts.userData = { vels, life, maxLife: life };
+  scene.add(pts);
+  particleSystems.push(pts);
+}
+
+function updateParticles(dt) {
+  for (let i = particleSystems.length - 1; i >= 0; i--) {
+    const p = particleSystems[i];
+    p.userData.life -= dt;
+    if (p.userData.life <= 0) { scene.remove(p); particleSystems.splice(i, 1); continue; }
+    p.material.opacity = Math.max(0, p.userData.life / p.userData.maxLife);
+    const pa = p.geometry.attributes.position.array;
+    const vs = p.userData.vels;
+    for (let j = 0; j < vs.length; j++) {
+      vs[j].y -= 12 * dt;
+      pa[j*3] += vs[j].x * dt;
+      pa[j*3+1] += vs[j].y * dt;
+      pa[j*3+2] += vs[j].z * dt;
+    }
+    p.geometry.attributes.position.needsUpdate = true;
+  }
+}
+
+function spawnKickFX(pos) {
+  spawnParticles(pos, 25, 0xffd700, 0xff8800, 5, 0.5, 0.15);
+}
+
+function showGoalFX() {
+  $goalOv.classList.remove('show');
+  void $goalOv.offsetWidth;
+  $goalOv.classList.add('show');
+  setTimeout(() => $goalOv.classList.remove('show'), 1600);
+
+  spawnParticles(ball.position.clone(), 150, 0xe63946, 0xffd166, 14, 2.2, 0.3);
+  spawnParticles(ball.position.clone().add(new THREE.Vector3(0,1,0)), 80, 0xffffff, 0xff6b6b, 10, 1.8, 0.2);
+}
+
+/* ============================
+   ATMOSPHERE PARTICLES (Boi toi)
+   ============================ */
+let atmosParticles;
+(function createAtmos() {
+  const count = 300;
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    pos[i*3] = (Math.random() - 0.5) * 120;
+    pos[i*3+1] = Math.random() * 20 + 1;
+    pos[i*3+2] = (Math.random() - 0.5) * 80;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  atmosParticles = new THREE.Points(geo, new THREE.PointsMaterial({
+    color: 0xfff8dd, size: 0.08, transparent: true, opacity: 0.25, depthWrite: false
+  }));
+  scene.add(atmosParticles);
+})();
+
+function updateAtmos(dt) {
+  if (!atmosParticles) return;
+  const pa = atmosParticles.geometry.attributes.position.array;
+  for (let i = 0; i < pa.length; i += 3) {
+    pa[i] += Math.sin(Date.now() * 0.0003 + i) * 0.005;
+    pa[i+1] -= 0.003;
+    if (pa[i+1] < 0.5) pa[i+1] = 18 + Math.random() * 4;
+  }
+  atmosParticles.geometry.attributes.position.needsUpdate = true;
+}
+
+/* ============================
+   CAMERA UPDATE
+   ============================ */
+const camTarget = new THREE.Vector3();
+const camPos = new THREE.Vector3();
+
+function updateCamera(dt) {
+  if (!char) return;
+  const desired = new THREE.Vector3(
+    char.position.x + Math.sin(camAngle) * camDist,
+    char.position.y + camH,
+    char.position.z + Math.cos(camAngle) * camDist
+  );
+  camPos.lerp(desired, Math.min(1, dt * 6));
+  camera.position.copy(camPos);
+
+  camTarget.lerp(char.position.clone().add(new THREE.Vector3(0, 1.5, 0)), Math.min(1, dt * 8));
+  camera.lookAt(camTarget);
+
+  sun.position.set(char.position.x + 15, 30, char.position.z + 10);
+  sun.target.position.copy(char.position);
+}
+
+/* ============================
+   MINIMAP
+   ============================ */
+function updateMinimap() {
+  $mc.width = 140; $mc.height = 95;
+  const ctx = mctx;
+  const sx = 140 / 115, sz = 95 / 75;
+  const ox = 5, oz = 3;
+
+  ctx.fillStyle = '#1a5c32';
+  ctx.fillRect(0, 0, 140, 95);
+
+  ctx.strokeStyle = 'rgba(255,255,255,.35)';
+  ctx.lineWidth = 0.8;
+  ctx.strokeRect(ox, oz, 105 * sx, 68 * sz);
+  ctx.beginPath();
+  ctx.moveTo(70, oz);
+  ctx.lineTo(70, oz + 68 * sz);
+  ctx.stroke();
+
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc((ball.position.x + 55) * sx + ox, (ball.position.z + 36) * sz + oz, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (char) {
+    const px = (char.position.x + 55) * sx + ox;
+    const pz = (char.position.z + 36) * sz + oz;
+    ctx.fillStyle = '#e63946';
+    ctx.beginPath();
+    ctx.arc(px, pz, 3.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#e63946';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(px, pz);
+    ctx.lineTo(px + Math.sin(char.rotation.y) * 9, pz + Math.cos(char.rotation.y) * 9);
+    ctx.stroke();
+  }
+}
+
+/* ============================
+   RESIZE
+   ============================ */
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+/* ============================
+   VONG LAP CHINH
+   ============================ */
+const clock = new THREE.Clock();
+let running = false;
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+
+  if (mixer) mixer.update(dt);
+  updatePlayer(dt);
+  updateBall(dt);
+  updateCamera(dt);
+  updateParticles(dt);
+  updateAtmos(dt);
+  updateMinimap();
+
+  renderer.render(scene, camera);
+}
+
+/* ============================
+   KHOI CHAY
+   ============================ */
+async function init() {
+  try {
+    $ltxt.textContent = 'Dang tai mo hinh Ronaldo...';
+    await loadModel();
+
+    $ltxt.textContent = 'Dang tai hoat anh...';
+    const promises = Object.keys(ANIMS).map(n => loadAnim(n));
+    await Promise.all(promises);
+
+    if (actions.idle) {
+      actions.idle.play();
+      curAction = actions.idle;
+      curState = 'idle';
+    }
+
+    $ls.classList.add('hide');
+    $hud.style.display = 'flex';
+    $cp.style.display = 'flex';
+    $mm.style.display = 'block';
+
+    running = true;
+    animate();
+  } catch (e) {
+    console.error('Loi:', e);
+    $ltxt.textContent = 'Khong the tai du lieu. Vui long kiem tra ket noi va thu lai.';
+  }
+}
+
+init();
+</script>
 </body>
 </html>
